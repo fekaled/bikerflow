@@ -1,0 +1,130 @@
+# BikerFlow — Project Progress Board
+
+> **Last Updated:** 2026-05-14 (Phase 1 Core Schema validated)
+> **Current Phase:** Phase 1 — Foundation (Validated — Ready for merge)
+
+---
+
+## Phase Overview
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| **Phase 1** | Foundation — Auth, core models, database schema | 🟢 Validated |
+| **Phase 2** | Shift Management — Live Tick + End-of-Shift Entry | 🔵 Not Started |
+| **Phase 3** | Payout Engine — Calculations, margin, financial precision | 🔵 Not Started |
+| **Phase 4** | Payment Integration — PIX release, retries, granular failure | 🔵 Not Started |
+| **Phase 5** | Dashboards & Notifications — Admin margin, biker status | 🔵 Not Started |
+
+---
+
+## User Stories
+
+| ID | Story | Status | Plan | Tests (RED) | Tests (GREEN) | Audit |
+|----|-------|--------|------|-------------|---------------|-------|
+| Phase-1 | Core Schema & Payout Formula | 🟢 Validated | `docs/plans/phase-1-core-schema-payout.md` | 10 test files | ✅ 205 pass, 365 assertions, 0 regressions | `docs/audits/phase-1-core-schema-audit.md` |
+| US-01 | PDF Trip Sheet for manual tracking | 🔵 Not Started | — | — | — | — |
+| US-02 | Holiday shift rate override | 🔵 Not Started | — | — | — | — |
+| US-03 | Admin Margin Dashboard | 🔵 Not Started | — | — | — | — |
+| US-04 | Biker PIX failure notification | 🔵 Not Started | — | — | — | — |
+
+---
+
+## Business Rules
+
+| ID | Rule | Status | Enforced In | Verified By |
+|----|------|--------|-------------|-------------|
+| BR-01 | Workflow Locking | 🟢 Validated | `app/Models/Shift.php` (boot saving hook) | Phase-1 audit (AC-36→AC-38a) |
+| BR-02 | PIX Verification | 🟡 Partial | Schema: `pix_keys` table (is_verified, verified_at) | Phase-1 audit (schema only, API deferred) |
+| BR-03 | Manual Release (Payout Formula) | 🟢 Validated | `app/Services/PayoutService.php` + `app/Services/RevenueService.php` | Phase-1 audit + BR-03 audit |
+| BR-04 | Granular Payment Failure | 🟡 Partial | Schema: payment per shift_biker, independent status | Phase-1 audit (schema only, controller deferred) |
+| BR-05 | Last Minute Biker (Admin Only) | 🟡 Partial | Schema: shift_biker pivot allows adding bikers | Phase-1 audit (schema only, auth deferred) |
+| BR-06 | Payment Retry Audit Logging | 🟢 Validated | Schema: `payment_audit_logs.transaction_ref` UNIQUE | Phase-1 audit (AC-08, BR-06) |
+
+---
+
+## Core Entities
+
+| Entity | Migration | Model | Controller | Routes | Tests | Status |
+|--------|-----------|-------|------------|--------|-------|--------|
+| Restaurant | ✅ `2026_05_14_000001` | ✅ `app/Models/Restaurant.php` | — | — | `RestaurantModelTest`, `FactoryTest`, `PayoutIntegrationTest` | 🟢 Validated |
+| Biker | ✅ `2026_05_14_000002` | ✅ `app/Models/Biker.php` | — | — | `BikerModelTest`, `FactoryTest`, `PayoutIntegrationTest` | 🟢 Validated |
+| Shift | ✅ `2026_05_14_000003` | ✅ `app/Models/Shift.php` | — | — | `ShiftModelTest`, `FactoryTest` | 🟢 Validated |
+| ShiftBiker | ✅ `2026_05_14_000004` | ✅ `app/Models/ShiftBiker.php` | — | — | `ShiftBikerModelTest`, `FactoryTest`, `PayoutIntegrationTest` | 🟢 Validated |
+| PixKey | ✅ `2026_05_14_000005` | ✅ `app/Models/PixKey.php` | — | — | `PixKeyModelTest`, `FactoryTest` | 🟢 Validated |
+| Payment | ✅ `2026_05_14_000006` | ✅ `app/Models/Payment.php` | — | — | `PaymentModelTest`, `FactoryTest` | 🟢 Validated |
+| PaymentAuditLog | ✅ `2026_05_14_000007` | ✅ `app/Models/PaymentAuditLog.php` | — | — | `PaymentAuditLogModelTest`, `FactoryTest` | 🟢 Validated |
+
+---
+
+## Infrastructure
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Dev Container | ✅ Done | Docker Compose operational |
+| Database (MySQL 8.4) | ✅ Done | Running, accessible |
+| Laravel 13 installed | ✅ Done | Framework bootstrapped |
+| PHPUnit configured | ✅ Done | SQLite in-memory, phpunit.xml ready |
+| Auth (WhatsApp Magic Link) | 🔵 Not Started | Deferred — Breeze + custom provider |
+| BCMath configured | 🟢 Validated | `app/Services/PayoutService.php` uses BCMath scale 2 for all arithmetic |
+| Snapshot/Rollback scripts | ✅ Done | `bin/agent-jail/` operational |
+
+---
+
+## TDD Pipeline
+
+The standard flow for every feature:
+
+```
+/plan <task>        →  Planner produces blueprint     →  🟡 Planned
+                          ↓
+/test <task> red    →  Tester writes failing tests     →  🟥 Tests RED
+                          ↓
+/develop <plan>     →  Developer implements code        →  🟠 In Development
+                          ↓
+/test <task> green  →  Tester confirms tests pass       →  🟩 Tests GREEN
+                          ↓
+/validate <task>    →  Validator audits                 →  🟢 Validated
+                          ↓
+merge to main       →  Orchestrator merges              →  ✅ Done
+```
+
+> **TDD Rule:** No code is written before a failing test describes it. No feature is complete until a passing test proves it.
+
+---
+
+## Status Legend
+
+| Icon | Status | Meaning |
+|------|--------|---------|
+| 🔵 | Not Started | No work has begun |
+| 🟡 | Planned | Planner has produced a blueprint in `docs/plans/` |
+| 🟥 | Tests RED | Tester has written failing tests (TDD — expected) |
+| 🟠 | In Development | Developer is writing code to make tests pass |
+| 🟩 | Tests GREEN | All tests pass, no regressions |
+| 🟣 | In Validation | Validator is auditing the implementation |
+| 🔴 | Blocked | Needs user decision or external input |
+| 🟢 | Validated | Validator has audited and approved |
+| ✅ | Done | Merged to `main`, production-ready |
+
+---
+
+## Agent Activity Log
+
+<!-- Newest entries at the top -->
+
+| Date | Agent | Action | Details |
+|------|-------|--------|---------|
+| 2026-05-14 | Tracker (manual) | Created ADR mechanism + ADR-001 | Created `docs/adr/` with README index, TEMPLATE.md, and ADR-001 (core payout schema). Updated tracker skill to automate ADR creation on future pipelines. Archived pipeline manifest to `docs/archives/pipelines/`. Added ADR cross-references to Shift model, ShiftStatus/PaymentStatus enums, plan file, and audit report. |
+| 2026-05-14 | Validator | Audited Phase-1 Core Schema — 🟢 PASS WITH CONDITIONS → fixed | 205 tests, 365 assertions. All 41 ACs met. 3 findings: (1) Restaurant `$guarded = []` removed — fixed, (2) AC numbering collision in plan — cosmetic, (3) plan scope says 6 enums but only 5 exist — cosmetic. Audit: `docs/audits/phase-1-core-schema-audit.md`. Verdict: PASS after fix. |
+| 2026-05-14 | Tracker | Updated progress board | Phase-1 Core Schema status: 🟢 Validated. All 7 entities validated. BR-01, BR-03, BR-06 fully enforced. BR-02, BR-04, BR-05 partial (schema only). 205 tests green. |
+| 2026-05-14 | Developer (Phase 1) | Implemented Phase-1 Core Schema | 30 files: 7 migrations, 7 models, 5 enums, 2 services (PayoutService preserved, RevenueService new), 7 factories, WorkflowLockedException. All 205 tests green. |
+| 2026-05-14 | Tester (Phase 1) | Tests GREEN — 205/205 pass | 10 test files: PayoutServiceTest (30), RevenueServiceTest (14), EnumTest (23), RestaurantModelTest (5), BikerModelTest (7), ShiftModelTest (30), ShiftBikerModelTest (6), PixKeyModelTest (11), PaymentModelTest (13), PaymentAuditLogModelTest (12), FactoryTest (26), PayoutIntegrationTest (15). |
+| 2026-05-14 | Tester (Phase 1) | Tests RED — 130 failing tests written | 10 test files covering all 41 ACs. All fail prior to implementation. |
+| 2026-05-13 | Planner | Produced blueprint | Phase 1 plan: 7 tables, 7 models, 2 services, 6 enums, 41 ACs. Complexity: Complex. 3 open questions flagged. |
+| 2026-05-14 | Tracker | Verified Phase-1 plan | Plan at `docs/plans/phase-1-core-schema-payout.md` confirmed present. Summary: 7 tables (restaurants, bikers, pix_keys, shifts, shift_bikers, payments, payment_audit_logs), 7 Eloquent models with relationships, 6 backed enums, 2 BCMath financial services (PayoutService, RevenueService), 7 factories, 41 acceptance criteria. 3 open questions flagged (auth FK columns, trip-level granularity, shift draft state). BR-01 (workflow locking), BR-03 (payout formula), BR-04 (granular failure), BR-06 (payment retry audit) all addressed in plan. |
+| 2026-05-14 | Validator | Audited BR-03 — 🟢 Validated | All 18 tests pass. BCMath scale 2 enforced. Formula matches PRD/BR-03 exactly. No floats in financial path. Negative trips rejection verified. Return type string verified. Decimal precision verified at DECIMAL(12,2) boundary. |
+| 2026-05-14 | Tester | Confirmed GREEN — 18/18 tests pass | `tests/Unit/PayoutServiceTest.php`: 18 tests (AC-05 through AC-16 + AC-29 + boundary tests), 0 failures, 0 regressions. BCMath precision verified. |
+| 2026-05-14 | Developer | Implemented PayoutService | `app/Services/PayoutService.php` — `calculate(baseFee, bikerRate, tripsCount): string`. BCMath bcmul/bcadd with scale 2. Zero-trip guard. InvalidArgumentException for negative trips. |
+| 2026-05-14 | Tester | Tests RED — 18 failing tests written | `tests/Unit/PayoutServiceTest.php` — 18 unit tests covering AC-05→AC-16, AC-29, boundary tests. All fail (PayoutService does not exist yet). |
+| 2026-05-14 | Planner | Produced BR-03 blueprint | `docs/plans/BR-03-payout-formula.md` — PayoutService with calculate(), 18+ acceptance criteria, BCMath scale 2, migration for shift_bikers inputs. |
+| 2026-05-13 | Orchestrator | Created progress board | Initial setup with TDD pipeline |

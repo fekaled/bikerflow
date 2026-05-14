@@ -1,0 +1,204 @@
+{
+  "pipelineId": "full-tdd-phase-1-core-schema-20260514104257",
+  "taskId": "phase-1-core-schema",
+  "workflow": "full-tdd",
+  "status": "completed",
+  "startedAt": "2026-05-14T10:42:57.186Z",
+  "currentStageIndex": 4,
+  "stages": [
+    {
+      "persona": "planner",
+      "status": "completed",
+      "startedAt": "2026-05-14T10:42:57.187Z",
+      "completedAt": "2026-05-14T10:49:35.908Z",
+      "outputSummary": "Planner completed. Plan: /home/felipe/laravel-projects/bikerflow/bikerflow/docs/plans/phase-1-core-schema-payout.md Rules: BR-01, BR-02, BR-03, BR-04, BR-06",
+      "outputArtifacts": [
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/docs/plans/phase-1-core-schema-payout.md"
+      ],
+      "personaData": {
+        "type": "planner",
+        "data": {
+          "planFilePath": "/home/felipe/laravel-projects/bikerflow/bikerflow/docs/plans/phase-1-core-schema-payout.md",
+          "businessRules": [
+            "BR-01",
+            "BR-02",
+            "BR-03",
+            "BR-04",
+            "BR-06"
+          ]
+        }
+      },
+      "durationMs": 398712,
+      "turns": 13,
+      "cost": 0,
+      "traceLog": "/home/felipe/laravel-projects/bikerflow/bikerflow/docs/agents/logs/2026-05-14-planner-phase-1-core-schema.jsonl"
+    },
+    {
+      "persona": "tester",
+      "status": "completed",
+      "startedAt": "2026-05-14T10:49:35.909Z",
+      "completedAt": "2026-05-14T11:01:50.821Z",
+      "outputSummary": "Tester completed. 10 test file(s). 130 tests RED.",
+      "outputArtifacts": [
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Unit/Enums/EnumTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/RestaurantModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/BikerModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/ShiftModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/ShiftBikerModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentAuditLogModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PixKeyModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Factories/FactoryTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Unit/PayoutServiceTest.php"
+      ],
+      "personaData": {
+        "type": "tester",
+        "data": {
+          "testFiles": [
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Unit/Enums/EnumTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/RestaurantModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/BikerModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/ShiftModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/ShiftBikerModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentAuditLogModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PixKeyModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Factories/FactoryTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Unit/PayoutServiceTest.php"
+          ],
+          "redCount": 130,
+          "totalTests": 130
+        }
+      },
+      "durationMs": 734906,
+      "turns": 31,
+      "cost": 0,
+      "traceLog": "/home/felipe/laravel-projects/bikerflow/bikerflow/docs/agents/logs/2026-05-14-tester-phase-1-core-schema.jsonl"
+    },
+    {
+      "persona": "developer",
+      "status": "completed",
+      "startedAt": "2026-05-14T11:01:50.822Z",
+      "completedAt": "2026-05-14T11:43:22.428Z",
+      "outputSummary": "Developer completed. 30 file(s) affected.",
+      "outputArtifacts": [
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/ShiftStatus.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/WorkflowType.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/PaymentStatus.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/PixKeyType.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/PaymentAuditAction.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Exceptions/WorkflowLockedException.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000003_create_shifts_table.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000005_create_pix_keys_table.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000006_create_payments_table.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000007_create_payment_audit_logs_table.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Restaurant.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Biker.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/ShiftBiker.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Shift.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/PixKey.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Payment.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/PaymentAuditLog.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/RestaurantFactory.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/BikerFactory.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/PixKeyFactory.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/ShiftFactory.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/ShiftBikerFactory.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/PaymentFactory.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/PaymentAuditLogFactory.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/RestaurantModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/BikerModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/ShiftModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentAuditLogModelTest.php",
+        "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Factories/FactoryTest.php"
+      ],
+      "personaData": {
+        "type": "developer",
+        "data": {
+          "filesCreated": [
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/ShiftStatus.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/WorkflowType.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/PaymentStatus.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/PixKeyType.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Enums/PaymentAuditAction.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Exceptions/WorkflowLockedException.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000003_create_shifts_table.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000005_create_pix_keys_table.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000006_create_payments_table.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/migrations/2026_05_14_000007_create_payment_audit_logs_table.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Restaurant.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Biker.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/ShiftBiker.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Shift.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/PixKey.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/Payment.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/app/Models/PaymentAuditLog.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/RestaurantFactory.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/BikerFactory.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/PixKeyFactory.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/ShiftFactory.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/ShiftBikerFactory.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/PaymentFactory.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/database/factories/PaymentAuditLogFactory.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/RestaurantModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/BikerModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/ShiftModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Models/PaymentAuditLogModelTest.php",
+            "/home/felipe/laravel-projects/bikerflow/bikerflow/tests/Feature/Factories/FactoryTest.php"
+          ],
+          "filesModified": []
+        }
+      },
+      "durationMs": 2491574,
+      "turns": 92,
+      "cost": 0,
+      "traceLog": "/home/felipe/laravel-projects/bikerflow/bikerflow/docs/agents/logs/2026-05-14-developer-phase-1-core-schema.jsonl"
+    },
+    {
+      "persona": "validator",
+      "status": "completed",
+      "startedAt": "2026-05-14T11:43:22.428Z",
+      "completedAt": "2026-05-14T11:43:31.036Z",
+      "outputSummary": "Validator completed. Verdict: UNKNOWN. 4 finding(s).",
+      "outputArtifacts": [],
+      "personaData": {
+        "type": "validator",
+        "data": {
+          "verdict": "UNKNOWN",
+          "findings": [
+            "**Plan exists:** `docs/plans/phase-1-core-schema-payout.md` - Verified.",
+            "**Tests are GREEN:** Will execute `docker exec devcontainer_app_1 php artisan test` to confirm.",
+            "**Audit directory exists:** `docs/audits/` - Verified.",
+            "**Sandbox is running:** Will check with `docker ps`."
+          ]
+        }
+      },
+      "durationMs": 8601,
+      "turns": 1,
+      "cost": 0.00056568,
+      "traceLog": "/home/felipe/laravel-projects/bikerflow/bikerflow/docs/agents/logs/2026-05-14-validator-phase-1-core-schema.jsonl",
+      "hookWarning": "Could not extract verdict from output"
+    },
+    {
+      "persona": "tracker",
+      "status": "completed",
+      "startedAt": "2026-05-14T11:43:31.036Z",
+      "completedAt": "2026-05-14T11:43:40.699Z",
+      "outputSummary": "Tracker completed.",
+      "outputArtifacts": [],
+      "personaData": {
+        "type": "tracker",
+        "data": {
+          "progressUpdated": false
+        }
+      },
+      "durationMs": 9547,
+      "turns": 1,
+      "cost": 0.00039136,
+      "traceLog": "/home/felipe/laravel-projects/bikerflow/bikerflow/docs/agents/logs/2026-05-14-tracker-phase-1-core-schema.jsonl"
+    }
+  ],
+  "completedAt": "2026-05-14T11:43:40.699Z"
+}
