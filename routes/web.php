@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -27,4 +28,10 @@ Route::middleware('auth')->group(function () {
 
         return redirect('/login');
     })->name('logout');
+});
+
+// Admin shift management
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('shifts', ShiftController::class);
+    Route::post('shifts/{shift}/close', [ShiftController::class, 'close'])->name('shifts.close');
 });
