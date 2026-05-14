@@ -7,7 +7,8 @@ This directory contains all architecture decisions for the BikerFlow project. Ea
 | ADR | Title | Date | Status | Business Rules |
 |-----|-------|------|--------|----------------|
 | [ADR-001](./001-core-payout-schema.md) | Core Payout Schema — Entities, Enums & State Machine | 2026-05-14 | ✅ Accepted | BR-01, BR-02, BR-03, BR-04, BR-06 |
-| ADR-002 | _Reserved for next decision_ | — | — | — |
+| [ADR-002](./002-auth-roles-magic-link.md) | Auth & Roles — Phone-Based Magic Link with RBAC | 2026-05-14 | ✅ Accepted | BR-03, BR-05 |
+| ADR-003 | _Reserved for next decision_ | — | — | — |
 
 ## How to Create a New ADR
 
