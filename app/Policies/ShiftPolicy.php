@@ -59,4 +59,12 @@ class ShiftPolicy
     {
         return $user->isAdmin();
     }
+
+    /**
+     * Only Admin can close shifts.
+     */
+    public function close(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
 }
