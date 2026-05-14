@@ -1,7 +1,7 @@
 # BikerFlow — Project Progress Board
 
-> **Last Updated:** 2026-05-14 (Phase 2A Auth & Roles validated)
-> **Current Phase:** Phase 2A — Auth & Roles (Validated)
+> **Last Updated:** 2026-05-14 (Phase 2B Shift CRUD & Lifecycle — ADR-003 created, pipeline finalized)
+> **Current Phase:** Phase 2B — Shift CRUD & Lifecycle (Validated with Conditions — ADR-003)
 
 ---
 
@@ -11,7 +11,7 @@
 |-------|-------------|--------|
 | **Phase 1** | Foundation — Auth, core models, database schema | 🟢 Validated |
 | **Phase 2A** | Auth & Roles — User authentication, RBAC, magic link | 🟢 Validated |
-| **Phase 2** | Shift Management — Live Tick + End-of-Shift Entry | 🔵 Not Started |
+| **Phase 2B** | Shift CRUD & Lifecycle — Admin shift management | 🟢 Validated* (ADR-003) |
 | **Phase 3** | Payout Engine — Calculations, margin, financial precision | 🔵 Not Started |
 | **Phase 4** | Payment Integration — PIX release, retries, granular failure | 🔵 Not Started |
 | **Phase 5** | Dashboards & Notifications — Admin margin, biker status | 🔵 Not Started |
@@ -23,6 +23,7 @@
 | ID | Story | Status | Plan | Tests (RED) | Tests (GREEN) | Audit |
 |----|-------|--------|------|-------------|---------------|-------|
 | Phase-1 | Core Schema & Payout Formula | 🟢 Validated | `docs/plans/phase-1-core-schema-payout.md` | 10 test files | ✅ 205 pass, 365 assertions, 0 regressions | `docs/audits/phase-1-core-schema-audit.md` |
+| Phase-2B | Shift CRUD & Lifecycle (Admin) | 🟢 Validated* (ADR-003) | `docs/plans/phase-2b-shift-crud-lifecycle.md` | `ShiftControllerTest` (74 tests) | ✅ 407 pass, 676 assertions, 0 regressions | `docs/audits/phase-2b-shift-crud-lifecycle-audit.md` |
 | Phase-2A | Auth & Roles: Magic Link + RBAC | 🟢 Validated | `docs/plans/phase-2a-auth-roles.md` | 5 test files (UserRoleEnumTest, MagicLinkTest, RoleMiddlewareTest, GatesPoliciesTest, UserModelTest) | ✅ All pass, 0 regressions | ADR-002 + 205 existing tests still green |
 | US-01 | PDF Trip Sheet for manual tracking | 🔵 Not Started | — | — | — | — |
 | US-02 | Holiday shift rate override | 🔵 Not Started | — | — | — | — |
@@ -50,14 +51,17 @@
 |--------|-----------|-------|------------|--------|-------|--------|
 | Restaurant | ✅ `2026_05_14_000001` | ✅ `app/Models/Restaurant.php` | — | — | `RestaurantModelTest`, `FactoryTest`, `PayoutIntegrationTest` | 🟢 Validated |
 | Biker | ✅ `2026_05_14_000002` | ✅ `app/Models/Biker.php` | — | — | `BikerModelTest`, `FactoryTest`, `PayoutIntegrationTest` | 🟢 Validated |
-| Shift | ✅ `2026_05_14_000003` | ✅ `app/Models/Shift.php` | — | — | `ShiftModelTest`, `FactoryTest` | 🟢 Validated |
+| Shift | ✅ `2026_05_14_000003` | ✅ `app/Models/Shift.php` | ✅ `app/Http/Controllers/Admin/ShiftController.php` | ✅ `routes/web.php` (admin-only resource + close) | `ShiftModelTest`, `FactoryTest`, `ShiftControllerTest` | 🟢 Validated |
+| StoreShiftRequest | — | — | ✅ `app/Http/Requests/StoreShiftRequest.php` | — | `ShiftControllerTest` | 🟢 Validated |
+| UpdateShiftRequest | — | — | ✅ `app/Http/Requests/UpdateShiftRequest.php` | — | `ShiftControllerTest` | 🟢 Validated |
+| CloseShiftRequest | — | — | ✅ `app/Http/Requests/CloseShiftRequest.php` | — | `ShiftControllerTest` | 🟢 Validated |
 | ShiftBiker | ✅ `2026_05_14_000004` | ✅ `app/Models/ShiftBiker.php` | — | — | `ShiftBikerModelTest`, `FactoryTest`, `PayoutIntegrationTest` | 🟢 Validated |
 | PixKey | ✅ `2026_05_14_000005` | ✅ `app/Models/PixKey.php` | — | — | `PixKeyModelTest`, `FactoryTest` | 🟢 Validated |
 | Payment | ✅ `2026_05_14_000006` | ✅ `app/Models/Payment.php` | — | — | `PaymentModelTest`, `FactoryTest` | 🟢 Validated |
 | PaymentAuditLog | ✅ `2026_05_14_000007` | ✅ `app/Models/PaymentAuditLog.php` | — | — | `PaymentAuditLogModelTest`, `FactoryTest` | 🟢 Validated |
 | User (auth) | ✅ `2026_05_14_000008` (alter), `2026_05_14_000009` (FK) | ✅ `app/Models/User.php` | ✅ `app/Http/Controllers/Auth/MagicLinkController.php` | ✅ `routes/web.php` (auth routes) | `UserModelTest`, `MagicLinkTest`, `RoleMiddlewareTest`, `GatesPoliciesTest`, `UserRoleEnumTest` | 🟢 Validated |
 | UserRole | ✅ `app/Enums/UserRole.php` | — | — | — | `UserRoleEnumTest` | 🟢 Validated |
-| ShiftPolicy | — | — | — | — | `GatesPoliciesTest` | 🟢 Validated |
+| ShiftPolicy | — | — | — | — | `GatesPoliciesTest`, `ShiftControllerTest` | 🟢 Validated |
 | RestaurantPolicy | — | — | — | — | `GatesPoliciesTest` | 🟢 Validated |
 | BikerPolicy | — | — | — | — | `GatesPoliciesTest` | 🟢 Validated |
 
@@ -121,6 +125,8 @@ merge to main       →  Orchestrator merges              →  ✅ Done
 
 | Date | Agent | Action | Details |
 |------|-------|--------|---------|
+| 2026-05-14 | Tracker | Finalized Phase 2B pipeline — created ADR-003 | Created `docs/adr/003-shift-crud-lifecycle.md` (Shift CRUD & Lifecycle). Updated ADR index (ADR-003, ADR-004 reserved). Phase 2B: 🟢 Validated* with 4 known findings (M-01 dashboard nav gap, M-02 numeric vs decimal:0,2, L-01 English text, L-02 Blade inline query). 74 tests, 407 total suite, 0 regressions. Next: Phase 3 — Payout Engine. |
+| 2026-05-14 | Validator | Audited Phase 2B Shift CRUD & Lifecycle — 🟢 PASS WITH CONDITIONS | 74 tests, 134 assertions. All 47 ACs met. BR-01 enforced at 3 layers. BR-05 enforced at 2 layers. 4 findings: M-01 dashboard missing Turnos link, M-02 validation rule deviation (numeric vs decimal:0,2), L-01 English text in PT-BR UI, L-02 inline User::find in Blade. Audit: `docs/audits/phase-2b-shift-crud-lifecycle-audit.md`. |
 | 2026-05-14 | Tracker | Updated progress for Phase 2A — Auth & Roles | Phase-2A status: 🟢 Validated. Created ADR-002 (`docs/adr/002-auth-roles-magic-link.md`). Updated ADR index. Added User/UserRole/Policy entities to Core Entities table. Updated BR-05 to 🟢 Validated. Updated Auth infrastructure to 🟢 Validated. Added Phase-2A row to Phase Overview. 5 new test files, 46 ACs covered. |
 | 2026-05-14 | Tracker (manual) | Created ADR mechanism + ADR-001 | Created `docs/adr/` with README index, TEMPLATE.md, and ADR-001 (core payout schema). Updated tracker skill to automate ADR creation on future pipelines. Archived pipeline manifest to `docs/archives/pipelines/`. Added ADR cross-references to Shift model, ShiftStatus/PaymentStatus enums, plan file, and audit report. |
 | 2026-05-14 | Validator | Audited Phase-1 Core Schema — 🟢 PASS WITH CONDITIONS → fixed | 205 tests, 365 assertions. All 41 ACs met. 3 findings: (1) Restaurant `$guarded = []` removed — fixed, (2) AC numbering collision in plan — cosmetic, (3) plan scope says 6 enums but only 5 exist — cosmetic. Audit: `docs/audits/phase-1-core-schema-audit.md`. Verdict: PASS after fix. |
