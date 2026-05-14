@@ -114,4 +114,19 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Magic Link Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the phone-based magic link authentication system.
+    | The expires value defines how long (in minutes) a magic link remains
+    | valid after generation.
+    |
+    */
+
+    'magic_link' => [
+        'expires' => env('AUTH_MAGIC_LINK_EXPIRES', 15),
+    ],
+
 ];
