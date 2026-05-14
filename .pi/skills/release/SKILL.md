@@ -162,12 +162,32 @@ EOF
 
 Print the resulting PR URL.
 
-## Post-Release
+## Phase 5: Post-Merge Cleanup
 
-After PR creation, remind the user:
+After the PR is created, remind the user:
 - The PR URL
-- That merging can be done via GitHub UI or `gh pr merge`
+- That merging can be done via GitHub UI or `gh pr merge <number>`
 - That `rollback.sh` is available if they need to restore the environment
+
+**🛑 GATE: Wait for the user to confirm the PR has been merged.**
+
+Once confirmed, offer to run the cleanup:
+
+```bash
+./bin/agent-jail/reset.sh
+```
+
+This script will:
+1. Switch to `main` and pull merged changes
+2. Delete the local feature branch
+3. Delete the remote feature branch
+4. Leave the user on `main`, ready for the next task
+
+After cleanup, remind the user to start the next cycle:
+
+```bash
+./bin/agent-jail/snapshot.sh   # creates new agent-work-* branch + DB dump
+```
 
 ## Important Rules
 
