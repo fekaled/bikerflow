@@ -1,7 +1,7 @@
 # BikerFlow — Project Progress Board
 
-> **Last Updated:** 2026-05-14 (Phase 2C Shift-Biker Assignment — ADR-004 created, pipeline complete)
-> **Current Phase:** Phase 2C — Shift-Biker Assignment (Validated — ADR-004)
+> **Last Updated:** 2026-05-15 (Phase 2D Live Tick Tracking — Tests RED, 57 tests written)
+> **Current Phase:** Phase 2D — Live Tick Tracking (Tests RED)
 
 ---
 
@@ -13,6 +13,7 @@
 | **Phase 2A** | Auth & Roles — User authentication, RBAC, magic link | 🟢 Validated |
 | **Phase 2B** | Shift CRUD & Lifecycle — Admin shift management | 🟢 Validated* (ADR-003) |
 | **Phase 2C** | Shift-Biker Assignment — Admin biker management on shifts | 🟢 Validated (ADR-004) |
+| **Phase 2D** | Live Tick Tracking — Restaurant Manager real-time trip counting | 🟥 Tests RED |
 | **Phase 3** | Payout Engine — Calculations, margin, financial precision | 🔵 Not Started |
 | **Phase 4** | Payment Integration — PIX release, retries, granular failure | 🔵 Not Started |
 | **Phase 5** | Dashboards & Notifications — Admin margin, biker status | 🔵 Not Started |
@@ -27,6 +28,7 @@
 | Phase-2C | Shift-Biker Assignment (Admin) | 🟢 Validated | `docs/plans/phase-2c-shift-biker-assignment.md` | `ShiftBikerControllerTest` (47 tests) | ✅ All pass, 0 regressions | ADR-004 |
 | Phase-2B | Shift CRUD & Lifecycle (Admin) | 🟢 Validated* (ADR-003) | `docs/plans/phase-2b-shift-crud-lifecycle.md` | `ShiftControllerTest` (74 tests) | ✅ 407 pass, 676 assertions, 0 regressions | `docs/audits/phase-2b-shift-crud-lifecycle-audit.md` |
 | Phase-2A | Auth & Roles: Magic Link + RBAC | 🟢 Validated | `docs/plans/phase-2a-auth-roles.md` | 5 test files (UserRoleEnumTest, MagicLinkTest, RoleMiddlewareTest, GatesPoliciesTest, UserModelTest) | ✅ All pass, 0 regressions | ADR-002 + 205 existing tests still green |
+| Phase-2D | Live Tick Tracking (Restaurant Manager) | 🟥 Tests RED | `docs/plans/phase-2d-live-tick-tracking.md` | `tests/Feature/Controllers/ShiftTrackingControllerTest.php` (57 tests) | — | — |
 | US-01 | PDF Trip Sheet for manual tracking | 🔵 Not Started | — | — | — | — |
 | US-02 | Holiday shift rate override | 🔵 Not Started | — | — | — | — |
 | US-03 | Admin Margin Dashboard | 🔵 Not Started | — | — | — | — |
@@ -38,7 +40,7 @@
 
 | ID | Rule | Status | Enforced In | Verified By |
 |----|------|--------|-------------|-------------|
-| BR-01 | Workflow Locking | 🟢 Validated | `app/Models/Shift.php` (boot saving hook) | Phase-1 audit (AC-36→AC-38a) |
+| BR-01 | Workflow Locking | 🟢 Validated* | `app/Models/Shift.php` (boot saving hook) + `TickTripRequest` (BR-01 live_tick guard — pending implementation) | Phase-1 audit (AC-36→AC-38a), Phase-2D pending |
 | BR-02 | PIX Verification | 🟡 Partial | Schema: `pix_keys` table (is_verified, verified_at) | Phase-1 audit (schema only, API deferred) |
 | BR-03 | Manual Release (Payout Formula) | 🟢 Validated | `app/Services/PayoutService.php` + `app/Services/RevenueService.php` | Phase-1 audit + BR-03 audit |
 | BR-04 | Granular Payment Failure | 🟡 Partial | Schema: payment per shift_biker, independent status | Phase-1 audit (schema only, controller deferred) |
@@ -65,6 +67,9 @@
 | PaymentAuditLog | ✅ `2026_05_14_000007` | ✅ `app/Models/PaymentAuditLog.php` | — | — | `PaymentAuditLogModelTest`, `FactoryTest` | 🟢 Validated |
 | User (auth) | ✅ `2026_05_14_000008` (alter), `2026_05_14_000009` (FK) | ✅ `app/Models/User.php` | ✅ `app/Http/Controllers/Auth/MagicLinkController.php` | ✅ `routes/web.php` (auth routes) | `UserModelTest`, `MagicLinkTest`, `RoleMiddlewareTest`, `GatesPoliciesTest`, `UserRoleEnumTest` | 🟢 Validated |
 | UserRole | ✅ `app/Enums/UserRole.php` | — | — | — | `UserRoleEnumTest` | 🟢 Validated |
+| ShiftTrackingController | — | — | 🔜 `app/Http/Controllers/RestaurantManager/ShiftTrackingController.php` | 🔜 `routes/web.php` | `ShiftTrackingControllerTest` | 🟥 Tests RED |
+| TickTripRequest | — | — | 🔜 `app/Http/Requests/TickTripRequest.php` | — | `ShiftTrackingControllerTest` | 🟥 Tests RED |
+| Tracking Dashboard View | — | — | — | 🔜 `resources/views/tracking/dashboard.blade.php` | `ShiftTrackingControllerTest` | 🟥 Tests RED |
 | ShiftPolicy | — | — | — | — | `GatesPoliciesTest`, `ShiftControllerTest` | 🟢 Validated |
 | RestaurantPolicy | — | — | — | — | `GatesPoliciesTest` | 🟢 Validated |
 | BikerPolicy | — | — | — | — | `GatesPoliciesTest` | 🟢 Validated |
@@ -129,6 +134,7 @@ merge to main       →  Orchestrator merges              →  ✅ Done
 
 | Date | Agent | Action | Details |
 |------|-------|--------|---------|
+| 2026-05-15 | Tracker | Updated progress for Phase 2D — Live Tick Tracking | Planner produced blueprint at `docs/plans/phase-2d-live-tick-tracking.md`. Tester wrote 57 failing tests at `tests/Feature/Controllers/ShiftTrackingControllerTest.php` (all RED — TDD RED phase). Covers AC-2D-01 through AC-2D-32: routes, authorization, BR-01 enforcement (live_tick workflow guard), tick execution, dashboard view, navigation. No new migrations. Next: Developer implements ShiftTrackingController, TickTripRequest, Blade view, routes. All 482 existing tests must remain green. |
 | 2026-05-14 | Tracker | Finalized Phase 2C pipeline — created ADR-004 | Created `docs/adr/004-shift-biker-assignment.md` (Shift-Biker Assignment). Updated ADR index. Phase 2C: 🟢 Validated. Deliverables: ShiftBikerController (4 actions), AssignBikerRequest, UpdateShiftBikerRequest, nested routes, Blade partial. BR-01 enforced at 2 layers, BR-05 at 3 layers. 47 test methods, all existing 407+ tests still green. No new migrations. Next: Phase 3 — Payout Engine. |
 | 2026-05-14 | Tracker | Finalized Phase 2B pipeline — created ADR-003 | Created `docs/adr/003-shift-crud-lifecycle.md` (Shift CRUD & Lifecycle). Updated ADR index (ADR-003, ADR-004 reserved). Phase 2B: 🟢 Validated* with 4 known findings (M-01 dashboard nav gap, M-02 numeric vs decimal:0,2, L-01 English text, L-02 Blade inline query). 74 tests, 407 total suite, 0 regressions. Next: Phase 3 — Payout Engine. |
 | 2026-05-14 | Validator | Audited Phase 2B Shift CRUD & Lifecycle — 🟢 PASS WITH CONDITIONS | 74 tests, 134 assertions. All 47 ACs met. BR-01 enforced at 3 layers. BR-05 enforced at 2 layers. 4 findings: M-01 dashboard missing Turnos link, M-02 validation rule deviation (numeric vs decimal:0,2), L-01 English text in PT-BR UI, L-02 inline User::find in Blade. Audit: `docs/audits/phase-2b-shift-crud-lifecycle-audit.md`. |
