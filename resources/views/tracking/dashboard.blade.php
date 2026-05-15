@@ -43,7 +43,10 @@
                                                 </button>
                                             </form>
                                         @else
-                                            <span class="text-gray-400 text-sm">Contagem manual</span>
+                                            <a href="{{ route('entry.show', $shift) }}"
+                                               class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                                                Registrar Viagens
+                                            </a>
                                         @endif
                                     </td>
                                 </tr>

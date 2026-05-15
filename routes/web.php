@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ShiftBikerController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Auth\MagicLinkController;
+use App\Http\Controllers\RestaurantManager\ShiftEntryController;
 use App\Http\Controllers\RestaurantManager\ShiftTrackingController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,10 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:restaurant_manager,admin'])->group(function () {
     Route::get('/tracking', [ShiftTrackingController::class, 'dashboard'])->name('tracking.dashboard');
     Route::post('/tracking/{shift}/tick', [ShiftTrackingController::class, 'tick'])->name('tracking.tick');
+
+    // Manual Entry — End-of-Shift Trip Entry (Phase 2E)
+    Route::get('/entry/{shift}', [ShiftEntryController::class, 'show'])->name('entry.show');
+    Route::post('/entry/{shift}', [ShiftEntryController::class, 'store'])->name('entry.store');
 });
 
 // Admin shift management
