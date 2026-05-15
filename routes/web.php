@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ShiftBikerController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use Illuminate\Support\Facades\Auth;
@@ -34,4 +35,10 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('shifts', ShiftController::class);
     Route::post('shifts/{shift}/close', [ShiftController::class, 'close'])->name('shifts.close');
+
+    // Shift-Biker assignment management (Phase 2C)
+    Route::get('shifts/{shift}/bikers', [ShiftBikerController::class, 'index'])->name('shifts.bikers.index');
+    Route::post('shifts/{shift}/bikers', [ShiftBikerController::class, 'store'])->name('shifts.bikers.store');
+    Route::patch('shifts/{shift}/bikers/{biker}', [ShiftBikerController::class, 'update'])->name('shifts.bikers.update');
+    Route::delete('shifts/{shift}/bikers/{biker}', [ShiftBikerController::class, 'destroy'])->name('shifts.bikers.destroy');
 });
