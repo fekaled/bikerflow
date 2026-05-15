@@ -62,7 +62,7 @@ class ShiftController extends Controller
      */
     public function show(Shift $shift)
     {
-        $shift->load('restaurant');
+        $shift->load('restaurant', 'shiftBikers.biker');
 
         return view('shifts.show', compact('shift'));
     }

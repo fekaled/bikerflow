@@ -73,4 +73,6 @@
             @endif
         </div>
     </div>
+
+    @include('shifts.partials.biker-assignments')
 @endsection
