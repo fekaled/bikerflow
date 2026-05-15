@@ -91,9 +91,11 @@ class Shift extends Model
                     );
                 }
 
-                // AC-36b: When transitioning draft → open, set started_at
+                // AC-36b: When transitioning draft → open, set started_at (only if not already set)
                 if ($originalIsDraft && $newStatus === ShiftStatus::Open) {
-                    $shift->started_at = now();
+                    if (blank($shift->started_at)) {
+                        $shift->started_at = now();
+                    }
                 }
             }
         });
