@@ -15,6 +15,9 @@
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('shifts.index') }}" class="text-sm text-gray-600 hover:text-gray-900">Turnos</a>
                     @endif
+                    @if(auth()->user()->isRestaurantManager())
+                        <a href="{{ route('tracking.dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">Acompanhamento</a>
+                    @endif
                 @endauth
             </div>
             @auth

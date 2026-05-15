@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ShiftStatus;
 use App\Models\Shift;
 use App\Models\User;
 
@@ -66,5 +67,25 @@ class ShiftPolicy
     public function close(User $user, Shift $shift): bool
     {
         return $user->isAdmin();
+    }
+
+    /**
+     * Phase 2D: Live Tick Tracking authorization.
+     *
+     * Admin can tick any open shift.
+     * Restaurant Manager can tick their own restaurant's open shifts.
+     */
+    public function tick(User $user, Shift $shift): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isRestaurantManager()) {
+            return $shift->status === ShiftStatus::Open
+                && $shift->restaurant_id === $user->restaurant_id;
+        }
+
+        return false;
     }
 }

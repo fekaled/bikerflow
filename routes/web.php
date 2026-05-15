@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ShiftBikerController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Auth\MagicLinkController;
+use App\Http\Controllers\RestaurantManager\ShiftTrackingController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,12 @@ Route::middleware('auth')->group(function () {
 
         return redirect('/login');
     })->name('logout');
+});
+
+// Live Tick Tracking — Restaurant Managers and Admins
+Route::middleware(['auth', 'role:restaurant_manager,admin'])->group(function () {
+    Route::get('/tracking', [ShiftTrackingController::class, 'dashboard'])->name('tracking.dashboard');
+    Route::post('/tracking/{shift}/tick', [ShiftTrackingController::class, 'tick'])->name('tracking.tick');
 });
 
 // Admin shift management
