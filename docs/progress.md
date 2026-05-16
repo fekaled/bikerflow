@@ -1,7 +1,7 @@
 # BikerFlow — Project Progress Board
 
-> **Last Updated:** 2026-05-15 (Phase 2E End-of-Shift Entry — 🟢 Validated)
-> **Current Phase:** Phase 2E — End-of-Shift Entry (Validated)
+> **Last Updated:** 2026-05-16 (Validator — Phase 3A Audited)
+> **Current Phase:** Phase 3A — Shift Close Review & Payout Calculation (🟢 Validated)
 
 ---
 
@@ -15,8 +15,10 @@
 | **Phase 2C** | Shift-Biker Assignment — Admin biker management on shifts | 🟢 Validated (ADR-004) |
 | **Phase 2D** | Live Tick Tracking — Restaurant Manager real-time trip counting | 🟢 Validated |
 | **Phase 2E** | End-of-Shift Entry — Restaurant Manager manual trip count entry | 🟢 Validated |
-| **Phase 3** | Payout Engine — Calculations, margin, financial precision | 🔵 Not Started |
-| **Phase 4** | Payment Integration — PIX release, retries, granular failure | 🔵 Not Started |
+| **Phase 3A** | Shift Close Review & Payout Calculation — close gate + batch payment creation | 🟢 Validated |
+| **Phase 3B** | Payment Release & Admin Approval — approve + release to processing | 🔵 Not Started |
+| **Phase 3C** | Payment Failure Handling & Retry — PIX failure, retry logic | 🔵 Not Started |
+| **Phase 4** | Payment Integration — PIX API execution | 🔵 Not Started |
 | **Phase 5** | Dashboards & Notifications — Admin margin, biker status | 🔵 Not Started |
 
 ---
@@ -31,6 +33,7 @@
 | Phase-2A | Auth & Roles: Magic Link + RBAC | 🟢 Validated | `docs/plans/phase-2a-auth-roles.md` | 5 test files (UserRoleEnumTest, MagicLinkTest, RoleMiddlewareTest, GatesPoliciesTest, UserModelTest) | ✅ All pass, 0 regressions | ADR-002 + 205 existing tests still green |
 | Phase-2D | Live Tick Tracking (Restaurant Manager) | 🟢 Validated | `docs/plans/phase-2d-live-tick-tracking.md` | `tests/Feature/Controllers/ShiftTrackingControllerTest.php` (57 tests) | ✅ All pass, 0 regressions | Phase 2D audit |
 | Phase-2E | End-of-Shift Entry (Restaurant Manager) | 🟢 Validated | `docs/plans/phase-2e-end-of-shift-entry.md` | `tests/Feature/Controllers/ShiftEntryControllerTest.php` (56 tests) | ✅ All pass, 0 regressions | BR-01 enforced at 3 layers |
+| Phase-3A | Shift Close Review & Payout Calculation | 🟢 Validated | `docs/plans/phase-3a-shift-close-payout-calculation.md` | `ShiftCloseServiceTest` (35), `ShiftCloseControllerTest` (49) | ✅ 84 pass (35 unit + 49 feature), 688 total suite, 0 regressions | `docs/audits/phase-3a-shift-close-payout-calculation-audit.md` |
 | US-01 | PDF Trip Sheet for manual tracking | 🔵 Not Started | — | — | — | — |
 | US-02 | Holiday shift rate override | 🔵 Not Started | — | — | — | — |
 | US-03 | Admin Margin Dashboard | 🔵 Not Started | — | — | — | — |
@@ -43,9 +46,9 @@
 | ID | Rule | Status | Enforced In | Verified By |
 |----|------|--------|-------------|-------------|
 | BR-01 | Workflow Locking | 🟢 Validated | `app/Models/Shift.php` (boot saving hook) + `TickTripRequest` (BR-01 live_tick guard) + `SubmitTripsRequest` (BR-01 manual_entry guard) | Phase-1 audit (AC-36→AC-38a), Phase-2D, Phase-2E (AC-2E-11, AC-2E-12) |
-| BR-02 | PIX Verification | 🟡 Partial | Schema: `pix_keys` table (is_verified, verified_at) | Phase-1 audit (schema only, API deferred) |
-| BR-03 | Manual Release (Payout Formula) | 🟢 Validated | `app/Services/PayoutService.php` + `app/Services/RevenueService.php` | Phase-1 audit + BR-03 audit |
-| BR-04 | Granular Payment Failure | 🟡 Partial | Schema: payment per shift_biker, independent status | Phase-1 audit (schema only, controller deferred) |
+| BR-02 | PIX Verification | 🟡 Partial | Schema: `pix_keys` table (is_verified, verified_at) + Phase 3A: eligibility warnings on close review (warning, not block) | Phase-1 audit (schema) + Phase 3A audit (warnings verified) |
+| BR-03 | Manual Release (Payout Formula) | 🟢 Validated | `app/Services/PayoutService.php` + `app/Services/RevenueService.php` + Phase 3A: `ShiftCloseService` batch integration, payments created in `pending` status only | Phase-1 audit + BR-03 audit + Phase 3A audit |
+| BR-04 | Granular Payment Failure | 🟢 Validated | Schema: Payment per shift_biker (HasOne), independent status + Phase 3A: batch Payment creation via `ShiftCloseService`, `firstOrCreate` idempotency guard | Phase-1 audit (schema) + Phase 3A audit (enforcement verified) |
 | BR-05 | Last Minute Biker (Admin Only) | 🟢 Validated | `app/Policies/ShiftPolicy.php` (addBiker), `app/Providers/AppServiceProvider.php` (manage-shift-bikers gate), `app/Http/Controllers/Admin/ShiftBikerController.php`, `app/Http/Requests/AssignBikerRequest.php` | Phase-2A (AC-30, AC-34), Phase-2C (AC-2C-01→AC-2C-07, AC-2C-32→AC-2C-38) |
 | BR-06 | Payment Retry Audit Logging | 🟢 Validated | Schema: `payment_audit_logs.transaction_ref` UNIQUE | Phase-1 audit (AC-08, BR-06) |
 
@@ -78,6 +81,9 @@
 | ShiftPolicy | — | — | — | — | `GatesPoliciesTest`, `ShiftControllerTest` | 🟢 Validated |
 | RestaurantPolicy | — | — | — | — | `GatesPoliciesTest` | 🟢 Validated |
 | BikerPolicy | — | — | — | — | `GatesPoliciesTest` | 🟢 Validated |
+| ShiftCloseService | ✅ `app/Services/ShiftCloseService.php` | ✅ `app/Http/Controllers/Admin/ShiftController.php` (reviewClose, confirmClose) | ✅ `routes/web.php` (shifts.close.review) | `ShiftCloseServiceTest` (35 tests) | 🟢 Validated |
+| ConfirmCloseShiftRequest | — | ✅ `app/Http/Requests/ConfirmCloseShiftRequest.php` | — | `ShiftCloseControllerTest` | 🟢 Validated |
+| Close Review View | — | — | ✅ `resources/views/shifts/close-review.blade.php` | `ShiftCloseControllerTest` (49 tests) | 🟢 Validated |
 
 ---
 
@@ -139,6 +145,11 @@ merge to main       →  Orchestrator merges              →  ✅ Done
 
 | Date | Agent | Action | Details |
 |------|-------|--------|---------|
+| 2026-05-16 | Validator | Audited Phase 3A — 🟢 PASS WITH CONDITIONS | 84 tests, 135 assertions. All 44 ACs met (AC-3A-01 through AC-3A-44). BR-02 (partial), BR-03, BR-04 fully enforced. ADR-005 D1–D5 all verified. 1 Medium finding: M-01 duplicate warning badges in close-review.blade.php (cosmetic, non-blocking). Payout formula BCMath-verified with manual trace. Revenue negative case verified. No float arithmetic. No security issues. No regressions. Audit: `docs/audits/phase-3a-shift-close-payout-calculation-audit.md`. Approved for merge. |
+| 2026-05-16 | Developer | Tests GREEN — Phase 3A implementation complete | 84 tests pass (35 unit + 49 feature). 688 total suite, 0 regressions. Files created: `app/Services/ShiftCloseService.php`, `app/Http/Requests/ConfirmCloseShiftRequest.php`, `resources/views/shifts/close-review.blade.php`, `database/migrations/2026_05_16_172157_add_revenue_to_payments_table.php`. Files modified: `app/Models/Payment.php` (revenue fillable + cast), `app/Http/Controllers/Admin/ShiftController.php` (reviewClose + confirmClose + AuthorizesRequests), `app/Policies/ShiftPolicy.php` (reviewClose), `routes/web.php` (close.review route, confirmClose mapping), `resources/views/shifts/show.blade.php` (link to review page), `resources/views/shifts/partials/biker-assignments.blade.php` (payment columns for closed shifts), `tests/Feature/Controllers/ShiftControllerTest.php` (4 tests updated to pass confirmed=1). Next: Validator audits. |
+| 2026-05-16 | Tester | Tests RED — 71 failing tests written for Phase 3A | 2 test files: `tests/Unit/Services/ShiftCloseServiceTest.php` (35 unit tests) and `tests/Feature/Controllers/ShiftCloseControllerTest.php` (49 feature tests — 36 fail + 13 pass with existing code). All 71 new tests fail as expected (TDD RED). 617 existing tests still green (0 regressions). Covers AC-3A-01 through AC-3A-44. Failure reasons: `ShiftCloseService` class not found, `shifts.close.review` route not defined, `ShiftPolicy@reviewClose` not defined, `ConfirmCloseShiftRequest` not enforcing `confirmed` field, no Payment row creation on close, `payments.revenue` column not yet added. Next: Developer implements to make tests pass. |
+| 2026-05-16 | Planner | Produced Phase 3A blueprint | Plan at `docs/plans/phase-3a-shift-close-payout-calculation.md`. Covers: two-step close flow (GET review → POST confirm), ShiftCloseService for batch payout calculation, Payment row creation per shift_biker, revenue column on payments, biker eligibility warnings (no User account / no verified PIX key). 44 acceptance criteria (AC-3A-01 through AC-3A-44). Refs ADR-005 D1–D5. Schema: add `revenue DECIMAL(12,2)` to payments table. New files: ShiftCloseService, ConfirmCloseShiftRequest, close-review Blade view, 2 test files. Modified: ShiftController (split close → reviewClose + confirmClose), routes, CloseShiftRequest, Payment model, shifts/show view, ShiftPolicy. Complexity: Complex. Next: Tester writes RED tests. |
+| 2026-05-15 | Manual (Product Owner) | Resolved 5 Phase 3 prerequisite decisions — ADR-005 | (1) Admin-only close, payout post-close. (2) Financial rates snapshotted at assignment. (3) Inactive bikers blocked from new assignments, existing preserved. (4) Bikers must have User accounts to be paid. (5) Admin confirms no contested trips before closing. ADR-005 created at `docs/adr/005-phase3-prerequisite-decisions.md`. |
 | 2026-05-15 | Tracker | Updated progress for Phase 2E — End-of-Shift Entry | Pipeline complete — 🟢 Validated. Deliverables: ShiftEntryController (show, store), SubmitTripsRequest (BR-01 manual_entry guard, shift open check, biker assignment check, non-negative integer validation), ShiftPolicy@submitTrips, web routes (`entry.show`, `entry.store` protected by auth + role:restaurant_manager,admin), Blade view (`entry/show.blade.php`), tracking dashboard integration ("Registrar Viagens" link for manual_entry shifts). 56 tests covering AC-2E-01 through AC-2E-33. BR-01 enforced at 3 layers (model boot hook, SubmitTripsRequest withValidator, ShiftPolicy). No new migrations. Phase 2D also validated (57 tests). All existing 543+ tests pass. Next: Phase 3 — Payout Engine. |
 | 2026-05-15 | Tracker | Updated progress for Phase 2D — Live Tick Tracking | Planner produced blueprint at `docs/plans/phase-2d-live-tick-tracking.md`. Tester wrote 57 failing tests at `tests/Feature/Controllers/ShiftTrackingControllerTest.php` (all RED — TDD RED phase). Covers AC-2D-01 through AC-2D-32: routes, authorization, BR-01 enforcement (live_tick workflow guard), tick execution, dashboard view, navigation. No new migrations. Next: Developer implements ShiftTrackingController, TickTripRequest, Blade view, routes. All 482 existing tests must remain green. |
 | 2026-05-14 | Tracker | Finalized Phase 2C pipeline — created ADR-004 | Created `docs/adr/004-shift-biker-assignment.md` (Shift-Biker Assignment). Updated ADR index. Phase 2C: 🟢 Validated. Deliverables: ShiftBikerController (4 actions), AssignBikerRequest, UpdateShiftBikerRequest, nested routes, Blade partial. BR-01 enforced at 2 layers, BR-05 at 3 layers. 47 test methods, all existing 407+ tests still green. No new migrations. Next: Phase 3 — Payout Engine. |

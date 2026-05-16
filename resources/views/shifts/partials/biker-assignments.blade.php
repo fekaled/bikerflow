@@ -1,6 +1,7 @@
 @php
     $isMutable = in_array($shift->status->value, ['draft', 'open']);
     $shiftBikers = $shift->shiftBikers;
+    $isClosed = $shift->status->value === 'closed';
 @endphp
 
 <div class="mt-8 bg-white rounded-lg shadow p-6">
@@ -16,6 +17,11 @@
                     <th class="py-2 px-3">Taxa por Viagem</th>
                     <th class="py-2 px-3">Taxa Base</th>
                     <th class="py-2 px-3">Viagens</th>
+                    @if($isClosed)
+                        <th class="py-2 px-3">Pagamento</th>
+                        <th class="py-2 px-3">Receita</th>
+                        <th class="py-2 px-3">Status</th>
+                    @endif
                     @if($isMutable)
                         <th class="py-2 px-3">Ações</th>
                     @endif
@@ -28,6 +34,11 @@
                         <td class="py-2 px-3">{{ $sb->biker_rate }}</td>
                         <td class="py-2 px-3">{{ $sb->base_fee }}</td>
                         <td class="py-2 px-3">{{ $sb->trips_count }}</td>
+                        @if($isClosed)
+                            <td class="py-2 px-3">{{ $sb->payment ? 'R$ ' . $sb->payment->amount : '—' }}</td>
+                            <td class="py-2 px-3">{{ $sb->payment ? 'R$ ' . $sb->payment->revenue : '—' }}</td>
+                            <td class="py-2 px-3">{{ $sb->payment ? $sb->payment->status->value : '—' }}</td>
+                        @endif
                         @if($isMutable)
                             <td class="py-2 px-3 flex gap-2">
                                 <form method="POST" action="{{ route('shifts.bikers.update', [$shift, $sb]) }}">

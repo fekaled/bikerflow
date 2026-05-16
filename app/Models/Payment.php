@@ -21,6 +21,7 @@ class Payment extends Model
     protected $fillable = [
         'shift_biker_id',
         'amount',
+        'revenue',
         'status',
         'released_by',
         'released_at',
@@ -35,6 +36,7 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'revenue' => 'decimal:2',
             'status' => PaymentStatus::class,
             'released_at' => 'datetime',
             'paid_at' => 'datetime',

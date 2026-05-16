@@ -46,7 +46,8 @@ Route::middleware(['auth', 'role:restaurant_manager,admin'])->group(function () 
 // Admin shift management
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('shifts', ShiftController::class);
-    Route::post('shifts/{shift}/close', [ShiftController::class, 'close'])->name('shifts.close');
+    Route::get('shifts/{shift}/close/review', [ShiftController::class, 'reviewClose'])->name('shifts.close.review');
+    Route::post('shifts/{shift}/close', [ShiftController::class, 'confirmClose'])->name('shifts.close');
 
     // Shift-Biker assignment management (Phase 2C)
     Route::get('shifts/{shift}/bikers', [ShiftBikerController::class, 'index'])->name('shifts.bikers.index');
