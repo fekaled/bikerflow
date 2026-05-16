@@ -771,7 +771,7 @@ class ShiftControllerTest extends TestCase
     {
         $shift = $this->createOpenShift();
 
-        $response = $this->actingAs($this->admin)->post(route('shifts.close', $shift));
+        $response = $this->actingAs($this->admin)->post(route('shifts.close', $shift), ['confirmed' => 1]);
 
         $response->assertRedirect(route('shifts.show', $shift));
 
@@ -791,7 +791,7 @@ class ShiftControllerTest extends TestCase
         $shift = $this->createOpenShift();
 
         $before = now()->subSecond();
-        $this->actingAs($this->admin)->post(route('shifts.close', $shift));
+        $this->actingAs($this->admin)->post(route('shifts.close', $shift), ['confirmed' => 1]);
         $after = now()->addSecond();
 
         $freshShift = $shift->fresh();
@@ -869,7 +869,7 @@ class ShiftControllerTest extends TestCase
     {
         $shift = $this->createOpenShift();
 
-        $response = $this->actingAs($this->admin)->post(route('shifts.close', $shift));
+        $response = $this->actingAs($this->admin)->post(route('shifts.close', $shift), ['confirmed' => 1]);
 
         $response->assertRedirect(route('shifts.show', $shift));
         $response->assertSessionHas('success');
@@ -1313,7 +1313,7 @@ class ShiftControllerTest extends TestCase
     {
         $shift = $this->createOpenShift(['workflow_type' => 'manual_entry']);
 
-        $this->actingAs($this->admin)->post(route('shifts.close', $shift));
+        $this->actingAs($this->admin)->post(route('shifts.close', $shift), ['confirmed' => 1]);
 
         $this->assertEquals(WorkflowType::ManualEntry, $shift->fresh()->workflow_type,
             'BR-01: workflow_type must be preserved after close');
