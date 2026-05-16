@@ -70,6 +70,14 @@ class ShiftPolicy
     }
 
     /**
+     * Phase 3A: Only Admin can review shift close.
+     */
+    public function reviewClose(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
      * Phase 2D: Live Tick Tracking authorization.
      *
      * Admin can tick any open shift.

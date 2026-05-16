@@ -6,14 +6,19 @@ use App\Enums\ShiftStatus;
 use App\Exceptions\WorkflowLockedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CloseShiftRequest;
+use App\Http\Requests\ConfirmCloseShiftRequest;
 use App\Http\Requests\StoreShiftRequest;
 use App\Http\Requests\UpdateShiftRequest;
 use App\Models\Restaurant;
 use App\Models\Shift;
+use App\Services\ShiftCloseService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 
 class ShiftController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
@@ -62,7 +67,7 @@ class ShiftController extends Controller
      */
     public function show(Shift $shift)
     {
-        $shift->load('restaurant', 'shiftBikers.biker');
+        $shift->load('restaurant', 'shiftBikers.biker', 'shiftBikers.payment');
 
         return view('shifts.show', compact('shift'));
     }
@@ -91,6 +96,38 @@ class ShiftController extends Controller
         } catch (WorkflowLockedException) {
             return back()->with('error', 'Não é possível alterar o método de rastreamento.')
                 ->withInput();
+        }
+    }
+
+    /**
+     * Phase 3A: Show close review page (GET).
+     */
+    public function reviewClose(Request $request, Shift $shift)
+    {
+        $this->authorize('reviewClose', $shift);
+
+        if ($shift->status !== ShiftStatus::Open) {
+            return redirect()->route('shifts.show', $shift)
+                ->with('error', 'Somente turnos abertos podem ser encerrados.');
+        }
+
+        $reviewData = app(ShiftCloseService::class)->getReviewData($shift);
+
+        return view('shifts.close-review', $reviewData);
+    }
+
+    /**
+     * Phase 3A: Confirm and close shift with payout calculation (POST).
+     */
+    public function confirmClose(ConfirmCloseShiftRequest $request, Shift $shift)
+    {
+        try {
+            app(ShiftCloseService::class)->closeAndCalculate($shift, $request->user());
+
+            return redirect()->route('shifts.show', $shift)
+                ->with('success', 'Turno encerrado. Pagamentos calculados com sucesso.');
+        } catch (\RuntimeException) {
+            return back()->with('error', 'Erro ao encerrar turno.');
         }
     }
 

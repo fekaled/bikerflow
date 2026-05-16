@@ -64,12 +64,9 @@
             @endif
 
             @if($shift->status->value === 'open')
-                <form method="POST" action="{{ route('shifts.close', $shift) }}">
-                    @csrf
-                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-                        Encerrar Turno
-                    </button>
-                </form>
+                <a href="{{ route('shifts.close.review', $shift) }}" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                    Encerrar Turno
+                </a>
             @endif
         </div>
     </div>
