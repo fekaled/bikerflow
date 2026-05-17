@@ -25,7 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
-
+*.swp
 # Agent observability logs (operational data, not source)
 docs/agents/logs/*.jsonl
 docs/agents/pipelines/*.json

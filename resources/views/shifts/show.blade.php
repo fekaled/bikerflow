@@ -68,6 +68,18 @@
                     Encerrar Turno
                 </a>
             @endif
+
+            @if(in_array($shift->status->value, ['closed', 'approved']))
+                <a href="{{ route('shifts.payments.review', $shift) }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Revisar Pagamentos
+                </a>
+            @endif
+
+            @if(in_array($shift->status->value, ['approved', 'paid']))
+                <a href="{{ route('shifts.payments.status', $shift) }}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Ver Status de Pagamentos
+                </a>
+            @endif
         </div>
     </div>
 

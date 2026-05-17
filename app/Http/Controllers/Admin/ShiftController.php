@@ -7,10 +7,16 @@ use App\Exceptions\WorkflowLockedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CloseShiftRequest;
 use App\Http\Requests\ConfirmCloseShiftRequest;
+use App\Http\Requests\MarkFailedRequest;
+use App\Http\Requests\MarkPaidRequest;
+use App\Http\Requests\RetryPaymentRequest;
 use App\Http\Requests\StoreShiftRequest;
 use App\Http\Requests\UpdateShiftRequest;
+use App\Models\Payment;
 use App\Models\Restaurant;
 use App\Models\Shift;
+use App\Services\PaymentReleaseService;
+use App\Services\PaymentSettlementService;
 use App\Services\ShiftCloseService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -132,6 +138,67 @@ class ShiftController extends Controller
     }
 
     /**
+     * Phase 3B: Show payment review page for a closed/approved shift (GET).
+     */
+    public function reviewPayments(Request $request, Shift $shift)
+    {
+        $this->authorize('reviewPayments', $shift);
+
+        if (! in_array($shift->status, [ShiftStatus::Closed, ShiftStatus::Approved])) {
+            return redirect()->route('shifts.show', $shift)
+                ->with('error', 'Somente turnos encerrados podem ter pagamentos revisados.');
+        }
+
+        $reviewData = app(PaymentReleaseService::class)->getPaymentReviewData($shift);
+
+        return view('shifts.payment-review', $reviewData);
+    }
+
+    /**
+     * Phase 3B: Release a single payment (POST).
+     */
+    public function releasePayment(Request $request, Shift $shift, Payment $payment)
+    {
+        $this->authorize('releasePayment', $shift);
+
+        // Validate that payment belongs to this shift
+        if ($payment->shiftBiker->shift_id !== $shift->id) {
+            abort(404);
+        }
+
+        try {
+            app(PaymentReleaseService::class)->releasePayment($payment, $request->user());
+
+            return redirect()->route('shifts.payments.review', $shift)
+                ->with('success', 'Pagamento liberado com sucesso.');
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Phase 3B: Batch release all eligible payments (POST).
+     */
+    public function releaseAllPayments(Request $request, Shift $shift)
+    {
+        $this->authorize('releasePayment', $shift);
+
+        if ($shift->status !== ShiftStatus::Closed && $shift->status !== ShiftStatus::Approved) {
+            return back()->with('error', 'Somente turnos encerrados podem ter pagamentos liberados.');
+        }
+
+        $results = app(PaymentReleaseService::class)->releaseAllEligiblePayments($shift, $request->user());
+
+        $message = count($results['released']).' pagamentos liberados.';
+        if (count($results['blocked']) > 0) {
+            $message .= ' '.count($results['blocked']).' pagamentos bloqueados.';
+        }
+
+        return redirect()->route('shifts.payments.review', $shift)
+            ->with('success', $message);
+    }
+
+    /**
      * Close the specified shift.
      */
     public function close(CloseShiftRequest $request, Shift $shift)
@@ -147,6 +214,90 @@ class ShiftController extends Controller
             return back()->with('error', 'Erro ao encerrar turno.');
         } catch (\RuntimeException) {
             return back()->with('error', 'Transição de status inválida.');
+        }
+    }
+
+    // ========================================================================
+    // Phase 3C: Payment Settlement
+    // ========================================================================
+
+    /**
+     * Phase 3C: Show per-shift payment status dashboard (GET).
+     */
+    public function paymentStatus(Request $request, Shift $shift)
+    {
+        $this->authorize('paymentStatus', $shift);
+
+        if (! in_array($shift->status, [ShiftStatus::Approved, ShiftStatus::Paid])) {
+            return redirect()->route('shifts.show', $shift)
+                ->with('error', 'Somente turnos aprovados ou pagos podem ter status revisado.');
+        }
+
+        $data = app(PaymentSettlementService::class)->getSettlementData($shift);
+
+        return view('shifts.payment-status', $data);
+    }
+
+    /**
+     * Phase 3C: Mark a processing payment as paid (POST).
+     */
+    public function markPaid(MarkPaidRequest $request, Shift $shift, Payment $payment)
+    {
+        $this->assertPaymentBelongsToShift($payment, $shift);
+
+        try {
+            app(PaymentSettlementService::class)->markPaid($payment, $request->user());
+
+            return back()->with('success', 'Pagamento marcado como pago.');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['payment' => $e->getMessage()], 'payment')
+                ->setStatusCode(422);
+        }
+    }
+
+    /**
+     * Phase 3C: Mark a processing payment as failed (POST).
+     */
+    public function markFailed(MarkFailedRequest $request, Shift $shift, Payment $payment)
+    {
+        $this->assertPaymentBelongsToShift($payment, $shift);
+
+        try {
+            app(PaymentSettlementService::class)->markFailed(
+                $payment, $request->user(), $request->validated('failure_reason')
+            );
+
+            return back()->with('success', 'Pagamento marcado como falha.');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['payment' => $e->getMessage()], 'payment')
+                ->setStatusCode(422);
+        }
+    }
+
+    /**
+     * Phase 3C: Retry a failed payment (POST).
+     */
+    public function retryPayment(RetryPaymentRequest $request, Shift $shift, Payment $payment)
+    {
+        $this->assertPaymentBelongsToShift($payment, $shift);
+
+        try {
+            app(PaymentSettlementService::class)->retry($payment, $request->user());
+
+            return back()->with('success', 'Pagamento reenviado para processamento.');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['payment' => $e->getMessage()], 'payment')
+                ->setStatusCode(422);
+        }
+    }
+
+    /**
+     * Verify that a payment belongs to the given shift. Abort 404 if not.
+     */
+    private function assertPaymentBelongsToShift(Payment $payment, Shift $shift): void
+    {
+        if ($payment->shiftBiker->shift_id !== $shift->id) {
+            abort(404);
         }
     }
 }
