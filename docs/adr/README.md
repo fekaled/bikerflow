@@ -11,7 +11,7 @@ This directory contains all architecture decisions for the BikerFlow project. Ea
 | [ADR-003](./003-shift-crud-lifecycle.md) | Shift CRUD & Lifecycle — Admin Management with Workflow Locking | 2026-05-14 | ✅ Accepted | BR-01, BR-05 |
 | [ADR-004](./004-shift-biker-assignment.md) | Shift-Biker Assignment — Admin Biker Management with Status Guards | 2026-05-14 | ✅ Accepted | BR-01, BR-05 |
 | [ADR-005](./005-phase3-prerequisite-decisions.md) | Phase 3 Payout Engine — Prerequisite Decisions | 2026-05-15 | ✅ Accepted | BR-02, BR-03, BR-04, BR-05 |
-| ADR-006 | _Reserved for next decision_ | — | — | — |
+| [ADR-006](./006-payout-engine-lifecycle-settlement-policy.md) | Payout Engine Lifecycle & Settlement Policy | 2026-05-17 | ✅ Accepted | BR-02, BR-03, BR-04, BR-06 |
 
 ## How to Create a New ADR
 
