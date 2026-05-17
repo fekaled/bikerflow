@@ -116,4 +116,52 @@ class ShiftPolicy
 
         return false;
     }
+
+    /**
+     * Phase 3B: Only Admin can review payments for a shift.
+     */
+    public function reviewPayments(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Phase 3B: Only Admin can release payments for a shift.
+     */
+    public function releasePayment(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Phase 3C: Only Admin can view the payment status dashboard.
+     */
+    public function paymentStatus(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Phase 3C: Only Admin can mark a payment as paid.
+     */
+    public function markPaid(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Phase 3C: Only Admin can mark a payment as failed.
+     */
+    public function markFailed(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Phase 3C: Only Admin can retry a failed payment.
+     */
+    public function retryPayment(User $user, Shift $shift): bool
+    {
+        return $user->isAdmin();
+    }
 }

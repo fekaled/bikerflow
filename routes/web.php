@@ -49,6 +49,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('shifts/{shift}/close/review', [ShiftController::class, 'reviewClose'])->name('shifts.close.review');
     Route::post('shifts/{shift}/close', [ShiftController::class, 'confirmClose'])->name('shifts.close');
 
+    // Phase 3B: Payment review and release
+    Route::get('shifts/{shift}/payments/review', [ShiftController::class, 'reviewPayments'])->name('shifts.payments.review');
+    Route::post('shifts/{shift}/payments/{payment}/release', [ShiftController::class, 'releasePayment'])->name('shifts.payments.release');
+    Route::post('shifts/{shift}/payments/release-all', [ShiftController::class, 'releaseAllPayments'])->name('shifts.payments.release-all');
+
+    // Phase 3C: Payment settlement (mark paid, mark failed, retry)
+    Route::get('shifts/{shift}/payments/status', [ShiftController::class, 'paymentStatus'])->name('shifts.payments.status');
+    Route::post('shifts/{shift}/payments/{payment}/mark-paid', [ShiftController::class, 'markPaid'])->name('shifts.payments.mark-paid');
+    Route::post('shifts/{shift}/payments/{payment}/mark-failed', [ShiftController::class, 'markFailed'])->name('shifts.payments.mark-failed');
+    Route::post('shifts/{shift}/payments/{payment}/retry', [ShiftController::class, 'retryPayment'])->name('shifts.payments.retry');
+
     // Shift-Biker assignment management (Phase 2C)
     Route::get('shifts/{shift}/bikers', [ShiftBikerController::class, 'index'])->name('shifts.bikers.index');
     Route::post('shifts/{shift}/bikers', [ShiftBikerController::class, 'store'])->name('shifts.bikers.store');

@@ -1,7 +1,8 @@
 @php
     $isMutable = in_array($shift->status->value, ['draft', 'open']);
     $shiftBikers = $shift->shiftBikers;
-    $isClosed = $shift->status->value === 'closed';
+    $isClosed = in_array($shift->status->value, ['closed', 'approved']);
+    $isApprovedOrPaid = in_array($shift->status->value, ['approved', 'paid']);
 @endphp
 
 <div class="mt-8 bg-white rounded-lg shadow p-6">
@@ -22,6 +23,9 @@
                         <th class="py-2 px-3">Receita</th>
                         <th class="py-2 px-3">Status</th>
                     @endif
+                    @if($isApprovedOrPaid)
+                        <th class="py-2 px-3">Detalhes</th>
+                    @endif
                     @if($isMutable)
                         <th class="py-2 px-3">Ações</th>
                     @endif
@@ -38,6 +42,23 @@
                             <td class="py-2 px-3">{{ $sb->payment ? 'R$ ' . $sb->payment->amount : '—' }}</td>
                             <td class="py-2 px-3">{{ $sb->payment ? 'R$ ' . $sb->payment->revenue : '—' }}</td>
                             <td class="py-2 px-3">{{ $sb->payment ? $sb->payment->status->value : '—' }}</td>
+                        @endif
+                        @if($isApprovedOrPaid)
+                            <td class="py-2 px-3 text-xs">
+                                @if($sb->payment)
+                                    @if($sb->payment->status->value === 'processing')
+                                        <span class="text-blue-600">Processando</span>
+                                    @elseif($sb->payment->status->value === 'paid')
+                                        <span class="text-green-600">Pago em {{ $sb->payment->paid_at ? $sb->payment->paid_at->format('d/m/Y H:i') : '—' }}</span>
+                                    @elseif($sb->payment->status->value === 'failed')
+                                        <span class="text-red-600">Falha: {{ $sb->payment->failure_reason ?? '—' }}</span>
+                                    @else
+                                        <span class="text-gray-500">{{ $sb->payment->status->value }}</span>
+                                    @endif
+                                @else
+                                    —
+                                @endif
+                            </td>
                         @endif
                         @if($isMutable)
                             <td class="py-2 px-3 flex gap-2">
