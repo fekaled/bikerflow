@@ -64,18 +64,6 @@
                                         {{ $warning }}
                                     </span>
                                 @endforeach
-
-                                @if(! $item['hasUser'])
-                                    <span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded mr-1 mb-1">
-                                        Sem conta de usuário
-                                    </span>
-                                @endif
-
-                                @if(! $item['hasVerifiedPixKey'])
-                                    <span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded mr-1 mb-1">
-                                        Sem chave PIX verificada
-                                    </span>
-                                @endif
                             </td>
                         </tr>
                     @endforeach
