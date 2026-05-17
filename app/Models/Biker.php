@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Biker extends Model
@@ -35,5 +36,26 @@ class Biker extends Model
     public function shiftBikers(): HasMany
     {
         return $this->hasMany(ShiftBiker::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id', 'biker_id');
+    }
+
+    /**
+     * BR-02: Check if biker has at least one verified PIX key.
+     */
+    public function hasVerifiedPixKey(): bool
+    {
+        return $this->pixKeys()->where('is_verified', true)->exists();
+    }
+
+    /**
+     * ADR-005 D4: Check if biker has a linked User account.
+     */
+    public function hasUserAccount(): bool
+    {
+        return User::where('biker_id', $this->id)->exists();
     }
 }

@@ -8,6 +8,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
 use App\Enums\ShiftStatus;
 use App\Enums\WorkflowType;
 use App\Exceptions\WorkflowLockedException;
@@ -54,6 +55,35 @@ class Shift extends Model
     public function shiftBikers(): HasMany
     {
         return $this->hasMany(ShiftBiker::class);
+    }
+
+    public function allPaymentsReleased(): bool
+    {
+        $this->loadMissing('shiftBikers.payment');
+
+        return $this->shiftBikers->every(
+            fn (ShiftBiker $sb) => $sb->payment && $sb->payment->status !== PaymentStatus::Pending
+        );
+    }
+
+    /**
+     * Phase 3C: Check if all payments in this shift are paid.
+     * Used by reconcileShiftStatus to auto-transition approved → paid.
+     *
+     * Vacuous truth: empty shifts return true (no payments to settle).
+     */
+    public function allPaymentsPaid(): bool
+    {
+        $this->loadMissing('shiftBikers.payment');
+
+        if ($this->shiftBikers->isEmpty()) {
+            return true;
+        }
+
+        return $this->shiftBikers->every(
+            fn (ShiftBiker $sb) => $sb->payment
+                && $sb->payment->status === PaymentStatus::Paid
+        );
     }
 
     protected static function booted(): void
