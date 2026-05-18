@@ -10,4 +10,5 @@ enum PaymentAuditAction: string
     case Retry = 'retry';
     case Fail = 'fail';
     case Succeed = 'succeed';
+    case VerifyPix = 'verify_pix';
 }
