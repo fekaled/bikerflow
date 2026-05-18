@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\PixKeyController;
 use App\Http\Controllers\Admin\ShiftBikerController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Auth\MagicLinkController;
@@ -65,4 +66,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('shifts/{shift}/bikers', [ShiftBikerController::class, 'store'])->name('shifts.bikers.store');
     Route::patch('shifts/{shift}/bikers/{biker}', [ShiftBikerController::class, 'update'])->name('shifts.bikers.update');
     Route::delete('shifts/{shift}/bikers/{biker}', [ShiftBikerController::class, 'destroy'])->name('shifts.bikers.destroy');
+
+    // Phase 4A: PIX Key Management
+    Route::get('admin/bikers/{biker}/pix-keys', [PixKeyController::class, 'index'])->name('admin.bikers.pix-keys.index');
+    Route::post('admin/pix-keys/{pixKey}/verify', [PixKeyController::class, 'verify'])->name('admin.pix-keys.verify');
+    Route::post('admin/pix-keys/{pixKey}/unverify', [PixKeyController::class, 'unverify'])->name('admin.pix-keys.unverify');
 });
