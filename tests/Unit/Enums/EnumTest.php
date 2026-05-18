@@ -213,8 +213,8 @@ class EnumTest extends TestCase
     {
         $cases = PaymentAuditAction::cases();
 
-        $this->assertCount(6, $cases,
-            'AC-22: PaymentAuditAction must have exactly 6 cases: Create, Release, Attempt, Retry, Fail, Succeed');
+        $this->assertCount(7, $cases,
+            'PaymentAuditAction must have exactly 7 cases: Create, Release, Attempt, Retry, Fail, Succeed, VerifyPix');
     }
 
     /**
