@@ -4,7 +4,6 @@ namespace Tests\Unit\Services;
 
 use App\Contracts\PixGatewayInterface;
 use App\Enums\PaymentAuditAction;
-use App\Enums\PixKeyType;
 use App\Enums\UserRole;
 use App\Models\Biker;
 use App\Models\PaymentAuditLog;
@@ -33,8 +32,11 @@ class PixVerificationServiceTest extends TestCase
     use RefreshDatabase;
 
     private PixVerificationService $service;
+
     private Biker $biker;
+
     private User $admin;
+
     private PixKey $unverifiedKey;
 
     protected function setUp(): void
@@ -150,7 +152,7 @@ class PixVerificationServiceTest extends TestCase
 
         $log = PaymentAuditLog::first();
         $this->assertStringStartsWith(
-            'pix-verify-ok-' . $this->unverifiedKey->id . '-',
+            'pix-verify-ok-'.$this->unverifiedKey->id.'-',
             $log->transaction_ref,
             'Audit log transaction_ref must start with "pix-verify-ok-{id}-" (AC-4A-13)',
         );
@@ -284,7 +286,7 @@ class PixVerificationServiceTest extends TestCase
             'Failure audit log must have error_message set (AC-4A-15)',
         );
         $this->assertStringStartsWith(
-            'pix-verify-fail-' . $failingKey->id . '-',
+            'pix-verify-fail-'.$failingKey->id.'-',
             $log->transaction_ref,
             'Failure audit log transaction_ref must start with "pix-verify-fail-{id}-" (AC-4A-15)',
         );
@@ -418,11 +420,11 @@ class PixVerificationServiceTest extends TestCase
     {
         // Use a mock/stub gateway that throws before any DB insert would happen.
         // This simulates the edge case where pix_key.biker_id references a deleted biker.
-        $stubGateway = $this->createMock(\App\Contracts\PixGatewayInterface::class);
+        $stubGateway = $this->createMock(PixGatewayInterface::class);
         $stubGateway->method('verifyKey')
             ->willThrowException(new \RuntimeException('Gateway connection timeout'));
 
-        $service = new \App\Services\PixVerificationService($stubGateway);
+        $service = new PixVerificationService($stubGateway);
 
         // Create a biker then remove it so pix_key has orphan biker_id
         $biker = Biker::factory()->create();
@@ -532,7 +534,7 @@ class PixVerificationServiceTest extends TestCase
             'Unverify audit log must use VerifyPix action (AC-4A-20)',
         );
         $this->assertStringStartsWith(
-            'pix-unverify-' . $verifiedKey->id . '-',
+            'pix-unverify-'.$verifiedKey->id.'-',
             $log->transaction_ref,
             'Unverify audit log transaction_ref must start with "pix-unverify-{id}-" (AC-4A-20)',
         );

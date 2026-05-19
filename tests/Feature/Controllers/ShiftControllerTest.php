@@ -5,6 +5,7 @@ namespace Tests\Feature\Controllers;
 use App\Enums\ShiftStatus;
 use App\Enums\UserRole;
 use App\Enums\WorkflowType;
+use App\Exceptions\WorkflowLockedException;
 use App\Models\Biker;
 use App\Models\Restaurant;
 use App\Models\Shift;
@@ -27,9 +28,13 @@ class ShiftControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $restaurantManager;
+
     private User $bikerUser;
+
     private Restaurant $restaurant;
+
     private Restaurant $inactiveRestaurant;
 
     protected function setUp(): void
@@ -1141,7 +1146,7 @@ class ShiftControllerTest extends TestCase
 
         // Even if we somehow bypass the form request, the model should block it.
         // We test by directly attempting a save through the model (simulating bypass).
-        $this->expectException(\App\Exceptions\WorkflowLockedException::class);
+        $this->expectException(WorkflowLockedException::class);
 
         $shift->workflow_type = 'manual_entry';
         $shift->save();

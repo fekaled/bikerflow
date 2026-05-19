@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Enums;
 
+use App\Enums\UserRole;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,7 +25,7 @@ class UserRoleEnumTest extends TestCase
     public function test_user_role_enum_exists(): void
     {
         $this->assertTrue(
-            enum_exists(\App\Enums\UserRole::class),
+            enum_exists(UserRole::class),
             'AC-09: App\Enums\UserRole enum must exist'
         );
     }
@@ -34,7 +35,7 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_is_backed_string_enum(): void
     {
-        $reflection = new \ReflectionEnum(\App\Enums\UserRole::class);
+        $reflection = new \ReflectionEnum(UserRole::class);
         $this->assertTrue($reflection->isBacked(),
             'AC-09: UserRole must be a backed enum');
 
@@ -50,7 +51,7 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_has_three_cases(): void
     {
-        $cases = \App\Enums\UserRole::cases();
+        $cases = UserRole::cases();
 
         $this->assertCount(3, $cases,
             'AC-09: UserRole must have exactly 3 cases: Admin, RestaurantManager, Biker');
@@ -61,7 +62,7 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_admin_value(): void
     {
-        $this->assertSame('admin', \App\Enums\UserRole::Admin->value,
+        $this->assertSame('admin', UserRole::Admin->value,
             'AC-09: UserRole::Admin must have value "admin"');
     }
 
@@ -70,7 +71,7 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_restaurant_manager_value(): void
     {
-        $this->assertSame('restaurant_manager', \App\Enums\UserRole::RestaurantManager->value,
+        $this->assertSame('restaurant_manager', UserRole::RestaurantManager->value,
             'AC-09: UserRole::RestaurantManager must have value "restaurant_manager"');
     }
 
@@ -79,7 +80,7 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_biker_value(): void
     {
-        $this->assertSame('biker', \App\Enums\UserRole::Biker->value,
+        $this->assertSame('biker', UserRole::Biker->value,
             'AC-09: UserRole::Biker must have value "biker"');
     }
 
@@ -88,9 +89,9 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_from_returns_correct_cases(): void
     {
-        $this->assertSame(\App\Enums\UserRole::Admin, \App\Enums\UserRole::from('admin'));
-        $this->assertSame(\App\Enums\UserRole::RestaurantManager, \App\Enums\UserRole::from('restaurant_manager'));
-        $this->assertSame(\App\Enums\UserRole::Biker, \App\Enums\UserRole::from('biker'));
+        $this->assertSame(UserRole::Admin, UserRole::from('admin'));
+        $this->assertSame(UserRole::RestaurantManager, UserRole::from('restaurant_manager'));
+        $this->assertSame(UserRole::Biker, UserRole::from('biker'));
     }
 
     /**
@@ -98,9 +99,9 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_try_from_returns_null_for_invalid(): void
     {
-        $this->assertNull(\App\Enums\UserRole::tryFrom('superadmin'),
+        $this->assertNull(UserRole::tryFrom('superadmin'),
             'AC-09: UserRole::tryFrom("superadmin") must return null');
-        $this->assertNull(\App\Enums\UserRole::tryFrom(''),
+        $this->assertNull(UserRole::tryFrom(''),
             'AC-09: UserRole::tryFrom("") must return null');
     }
 
@@ -114,7 +115,7 @@ class UserRoleEnumTest extends TestCase
     public function test_user_role_has_labels_method(): void
     {
         $this->assertTrue(
-            method_exists(\App\Enums\UserRole::class, 'labels'),
+            method_exists(UserRole::class, 'labels'),
             'AC-10: UserRole must have a labels() method'
         );
     }
@@ -124,7 +125,7 @@ class UserRoleEnumTest extends TestCase
      */
     public function test_user_role_labels_returns_readable_values(): void
     {
-        $labels = \App\Enums\UserRole::labels();
+        $labels = UserRole::labels();
 
         $this->assertIsArray($labels, 'AC-10: labels() must return an array');
         $this->assertCount(3, $labels, 'AC-10: labels() must return exactly 3 entries');

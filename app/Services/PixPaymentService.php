@@ -172,7 +172,7 @@ class PixPaymentService
      * Auto-transition shift approved → paid ONLY when every payment is paid.
      * BR-04 reinforced: shift NEVER moves backward.
      */
-    private function reconcileShiftStatus(Shift $shift): void
+    public function reconcileShiftStatus(Shift $shift): void
     {
         $shift->refresh();
         $shift->loadMissing('shiftBikers.payment');

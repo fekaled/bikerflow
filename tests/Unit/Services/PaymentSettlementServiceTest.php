@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services;
 
-use App\Contracts\PixGatewayInterface;
 use App\Enums\PaymentAuditAction;
 use App\Enums\PaymentStatus;
 use App\Enums\ShiftStatus;
@@ -60,7 +59,7 @@ class PaymentSettlementServiceTest extends TestCase
         // Phase 4B: Bind MockPixGateway so PaymentSettlementService can resolve it
         // Inject gateway directly into service via constructor (avoids polluting container)
         $this->app->instance(PaymentSettlementService::class, new PaymentSettlementService(
-            new MockPixGateway()
+            new MockPixGateway
         ));
     }
 
@@ -989,7 +988,7 @@ class PaymentSettlementServiceTest extends TestCase
 
     /**
      * AC-3C-42: Every successful settlement transition writes exactly one audit log.
-     * 
+     *
      * NOTE: Phase 4B gateway integration creates a gateway_attempt log alongside retry,
      * so retry() produces 2 logs (retry + gateway_attempt) instead of 1.
      */
@@ -1023,7 +1022,7 @@ class PaymentSettlementServiceTest extends TestCase
 
     /**
      * AC-3C-43: transaction_ref is unique across all audit log rows.
-     * 
+     *
      * NOTE: Phase 4B gateway integration creates gateway_attempt logs,
      * so markFailed + retry creates 3 logs (fail + retry + gateway_attempt).
      */
@@ -1044,7 +1043,7 @@ class PaymentSettlementServiceTest extends TestCase
         $logs = PaymentAuditLog::where('payment_id', $payment->id)->get();
         $this->assertCount(3, $logs,
             'AC-3C-43: 3 audit logs (fail + retry + gateway_attempt)');
-        
+
         $refs = $logs->pluck('transaction_ref')->toArray();
         $this->assertEquals(count($refs), count(array_unique($refs)),
             'AC-3C-43: All transaction_refs must be unique');

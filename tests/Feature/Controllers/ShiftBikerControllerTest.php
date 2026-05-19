@@ -27,10 +27,15 @@ class ShiftBikerControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $restaurantManager;
+
     private User $bikerUser;
+
     private Restaurant $restaurant;
+
     private Biker $activeBiker;
+
     private Biker $inactiveBiker;
 
     protected function setUp(): void

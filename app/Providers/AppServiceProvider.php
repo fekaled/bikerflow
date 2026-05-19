@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(WhatsappServiceInterface::class, WhatsappLogService::class);
 
         // Phase 4A: PIX Gateway Service Provider
-        $this->app->register(\App\Providers\PixGatewayServiceProvider::class);
+        $this->app->register(PixGatewayServiceProvider::class);
     }
 
     /**

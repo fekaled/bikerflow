@@ -5,8 +5,12 @@ namespace Tests\Feature\Controllers\Admin;
 use App\Enums\PaymentAuditAction;
 use App\Enums\UserRole;
 use App\Models\Biker;
+use App\Models\Payment;
 use App\Models\PaymentAuditLog;
 use App\Models\PixKey;
+use App\Models\Restaurant;
+use App\Models\Shift;
+use App\Models\ShiftBiker;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -30,9 +34,13 @@ class PixKeyControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $nonAdmin;
+
     private Biker $biker;
+
     private PixKey $unverifiedKey;
+
     private PixKey $verifiedKey;
 
     protected function setUp(): void
@@ -450,19 +458,19 @@ class PixKeyControllerTest extends TestCase
             'biker_id' => $isolatedBiker->id,
         ]);
 
-        $restaurant = \App\Models\Restaurant::factory()->create(['rate_per_trip' => '15.00']);
-        $shift = \App\Models\Shift::factory()->started()->create([
+        $restaurant = Restaurant::factory()->create(['rate_per_trip' => '15.00']);
+        $shift = Shift::factory()->started()->create([
             'restaurant_id' => $restaurant->id,
             'restaurant_rate' => '15.00',
         ]);
-        $shiftBiker = \App\Models\ShiftBiker::factory()->create([
+        $shiftBiker = ShiftBiker::factory()->create([
             'shift_id' => $shift->id,
             'biker_id' => $isolatedBiker->id,
             'biker_rate' => '10.00',
             'base_fee' => '25.00',
             'trips_count' => 5,
         ]);
-        $payment = \App\Models\Payment::factory()->create([
+        $payment = Payment::factory()->create([
             'shift_biker_id' => $shiftBiker->id,
             'amount' => '75.00',
             'revenue' => '75.00',
@@ -509,19 +517,19 @@ class PixKeyControllerTest extends TestCase
             'biker_id' => $isolatedBiker->id,
         ]);
 
-        $restaurant = \App\Models\Restaurant::factory()->create(['rate_per_trip' => '15.00']);
-        $shift = \App\Models\Shift::factory()->started()->create([
+        $restaurant = Restaurant::factory()->create(['rate_per_trip' => '15.00']);
+        $shift = Shift::factory()->started()->create([
             'restaurant_id' => $restaurant->id,
             'restaurant_rate' => '15.00',
         ]);
-        $shiftBiker = \App\Models\ShiftBiker::factory()->create([
+        $shiftBiker = ShiftBiker::factory()->create([
             'shift_id' => $shift->id,
             'biker_id' => $isolatedBiker->id,
             'biker_rate' => '10.00',
             'base_fee' => '25.00',
             'trips_count' => 3,
         ]);
-        $payment = \App\Models\Payment::factory()->create([
+        $payment = Payment::factory()->create([
             'shift_biker_id' => $shiftBiker->id,
             'amount' => '55.00',
             'revenue' => '55.00',

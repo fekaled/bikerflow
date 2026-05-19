@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class VerifyPixKeyRequest extends FormRequest
@@ -20,7 +21,7 @@ class VerifyPixKeyRequest extends FormRequest
      * Empty for now — no user input beyond the route parameter.
      * Future phases may add confirmation fields.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {

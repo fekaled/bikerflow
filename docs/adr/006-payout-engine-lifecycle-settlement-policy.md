@@ -3,10 +3,10 @@
 **Date:** 2026-05-17
 **Status:** ✅ Accepted
 **Decision Maker:** Planner (blueprint), Product Owner (OQ-3C-01/02/03), Validator (audit)
-**Task ID:** Phase 3A / 3B / 3C
+**Task ID:** Phase 3A / 3B / 3C / 4C
 **Pipeline:** implement-only-Phase-3C-20260517123007 (final phase)
 **Business Rules:** BR-02, BR-03, BR-04, BR-06
-**Related Plans:** `docs/plans/phase-3a-*.md`, `docs/plans/phase-3b-*.md`, `docs/plans/phase-3c-*.md`
+**Related Plans:** `docs/plans/phase-3a-*.md`, `docs/plans/phase-3b-*.md`, `docs/plans/phase-3c-*.md`, `docs/plans/phase-4b-*.md`, `docs/plans/phase-4c-*.md`
 
 ---
 
@@ -81,8 +81,9 @@ Two automatic shift state transitions occur as payments progress:
 | All payments for a shift are `processing` (or beyond) | `closed → approved` | `PaymentReleaseService::checkAndTransitionShiftToApproved` — called after each individual and batch release |
 | All payments for a shift are `paid` | `approved → paid` | `PaymentSettlementService::reconcileShiftStatus` — called after **manual** mark-paid |
 | All payments for a shift are `paid` | `approved → paid` | `PixPaymentService::reconcileShiftStatus` — called after **gateway auto-paid** (sync "processed" response) |
+| All payments for a shift are `paid` | `approved → paid` | `PixWebhookService` → `PixPaymentService::reconcileShiftStatus` — called after **webhook callback** (async "processed" response) |
 
-> **Note (Phase 4B):** The `approved → paid` transition now has two trigger paths: (1) manual Admin mark-paid via the settlement dashboard, and (2) automatic gateway response when the PIX gateway returns `status = "processed"` synchronously. Both call the same `reconcileShiftStatus()` method, which is idempotent.
+> **Note (Phase 4B → 4C):** The `approved → paid` transition has **three** trigger paths: (1) manual Admin mark-paid via the settlement dashboard, (2) automatic gateway response when the PIX gateway returns `status = "processed"` synchronously (Phase 4B), and (3) webhook callback when the gateway delivers the final status asynchronously (Phase 4C). All three call the same `PixPaymentService::reconcileShiftStatus()` method, which is idempotent. The webhook service delegates to `PixPaymentService` to keep all gateway-driven reconciliation in one place.
 
 Both transitions are:
 - **Guarded at the service layer** — short-circuit if shift is not in the expected source status.
@@ -189,8 +190,9 @@ When retrying a failed payment, the service **re-runs the same `isEligibleForRel
 | Service | `app/Services/ShiftCloseService.php` | 3A | Close review + batch Payment creation (D1, D2 warning tier) |
 | Service | `app/Services/PaymentReleaseService.php` | 3B/4B | Release + eligibility hard block (D2 block tier, D3, D4) + gateway call via `gatewayInitiateTransfer()` |
 | Service | `app/Services/PaymentSettlementService.php` | 3C/4B | Mark paid/failed/retry + reconciliation (D4, D5, D6, D7) + gateway call on retry + gateway fields in settlement data |
-| Service | `app/Services/PixPaymentService.php` | 4B | Gateway call orchestrator — initiateTransfer, auto-transition on sync responses, audit logging (D4 gateway path) |
-| Service | `app/Services/Gateway/MockPixGateway.php` | 4A/4B | Gateway mock — `.01`→processed, `.02`→failed, default→queued |
+| Service | `app/Services/PixPaymentService.php` | 4B/4C | Gateway call orchestrator — initiateTransfer, auto-transition on sync responses, audit logging (D4 gateway path) + shared `reconcileShiftStatus()` called by webhook service |
+| Service | `app/Services/PixWebhookService.php` | 4C | Webhook payload processing — resolves payment by `gateway_transaction_id`, updates status, writes audit log, delegates reconciliation to `PixPaymentService` (D4 webhook path) |
+| Service | `app/Services/Gateway/MockPixGateway.php` | 4A/4B/4C | Gateway mock — `.01`→processed, `.02`→failed, default→queued + `checkPaymentStatus()` deterministic patterns (`-sync-failed`, `-sync-pending`) |
 | Migration | `database/migrations/2026_05_17_000001_add_failure_columns_to_payments_table.php` | 3C | `failed_at`, `failure_reason`, `retry_count` (D5, D6) |
 | Migration | `database/migrations/2026_05_17_000002_add_gateway_columns_to_payments_table.php` | 4B | `gateway_transaction_id`, `gateway_status` for gateway reconciliation |
 | Model | `app/Models/Payment.php` | 3A/3B/3C/4B | `isEligibleForRelease()`, `isEligibleForRetry()`, fillable/casts (D2, D7) + gateway fields |
@@ -204,6 +206,12 @@ When retrying a failed payment, the service **re-runs the same `isEligibleForRel
 | Policy | `app/Policies/ShiftPolicy.php` | 3A/3B/3C | Admin-only guards for all actions |
 | Controller | `app/Http/Controllers/Admin/ShiftController.php` | 3A/3B/3C | All payout lifecycle endpoints |
 | Enum | `app/Enums/PaymentAuditAction.php` | 4A/4B | `VerifyPix` + `GatewayAttempt` enum cases |
+| Controller | `app/Http/Controllers/Webhook/PixWebhookController.php` | 4C | Unauthenticated webhook endpoint — receives POST callbacks at `/webhooks/pix/status` |
+| Middleware | `app/Http/Middleware/VerifyPixWebhookSignature.php` | 4C | HMAC signature verification for webhook authenticity |
+| Request | `app/Http/Requests/PixWebhookRequest.php` | 4C | Validates webhook payload structure (transaction_id, status, amount, error_code, error_message, timestamp) |
+| Command | `app/Console/Commands/VerifyPixPayment.php` | 4C | Artisan `pix:webhook:verify` — manual status check for Admins |
+| Model | `app/Models/PixWebhookLog.php` | 4C | Eloquent model for webhook delivery log (operational/debugging) |
+| Migration | `database/migrations/2026_05_18_000002_create_pix_webhook_logs_table.php` | 4C | `pix_webhook_logs` table — webhook delivery audit trail |
 | Test | `tests/Unit/Services/ShiftCloseServiceTest.php` | 3A | 35 unit tests |
 | Test | `tests/Unit/Services/PaymentReleaseServiceTest.php` | 3B | Unit tests |
 | Test | `tests/Unit/Services/PaymentSettlementServiceTest.php` | 3C/4B | 51 unit tests |
@@ -214,6 +222,10 @@ When retrying a failed payment, the service **re-runs the same `isEligibleForRel
 | Test | `tests/Feature/Controllers/PixPaymentControllerTest.php` | 4B | 25 feature tests |
 | Test | `tests/Feature/Controllers/PaymentReleaseWithGatewayTest.php` | 4B | 9 feature tests |
 | Test | `tests/Feature/Controllers/PaymentRetryWithGatewayTest.php` | 4B | 10 feature tests |
+| Test | `tests/Unit/Services/PixWebhookServiceTest.php` | 4C | Unit tests for webhook processing logic |
+| Test | `tests/Unit/Middleware/VerifyPixWebhookSignatureTest.php` | 4C | Unit tests for HMAC middleware |
+| Test | `tests/Unit/Gateway/MockPixGatewayTest.php` | 4C | Unit tests for `checkPaymentStatus()` deterministic patterns |
+| Test | `tests/Feature/Controllers/PixWebhookControllerTest.php` | 4C | Feature tests for webhook endpoint |
 
 ---
 
@@ -225,8 +237,9 @@ This ADR consolidates decisions underlying the following ACs:
 - **Phase 3B:** AC-3B-01 through AC-3B-46 (payment release, eligibility hard block, batch skip, auto-transition to approved)
 - **Phase 3C:** AC-3C-01 through AC-3C-48 (mark paid/failed, retry cap, auto-fail, auto-transition to paid, re-eligibility)
 - **Phase 4B:** AC-4B-01 through AC-4B-50 (gateway integration, auto-transition on sync response, gateway audit trail, settlement dashboard updates)
+- **Phase 4C:** AC-4C-01 through AC-4C-59 (webhook processing, HMAC verification, async status resolution, manual verify command)
 
-Total: **188 acceptance criteria** across four phases.
+Total: **247 acceptance criteria** across five phases.
 
 ---
 
@@ -238,6 +251,7 @@ Total: **188 acceptance criteria** across four phases.
 - Plan: `docs/plans/phase-3b-payment-release-admin-approval.md`
 - Plan: `docs/plans/phase-3c-payment-failure-and-retry.md`
 - Plan: `docs/plans/phase-4b-pix-payment-execution.md`
+- Plan: `docs/plans/phase-4c-pix-webhooks-async-status.md`
 - Audit: `docs/audits/phase-3a-shift-close-payout-calculation-audit.md`
 - Audit: `docs/audits/phase-3b-payment-release-admin-approval-audit.md`
 - Audit: `docs/audits/phase-3c-audit.md`

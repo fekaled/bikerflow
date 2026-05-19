@@ -4,7 +4,6 @@ namespace Tests\Feature\Controllers;
 
 use App\Enums\ShiftStatus;
 use App\Enums\UserRole;
-use App\Enums\WorkflowType;
 use App\Models\Biker;
 use App\Models\Restaurant;
 use App\Models\Shift;
@@ -29,12 +28,19 @@ class ShiftTrackingControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $restaurantManager;
+
     private User $otherRestaurantManager;
+
     private User $bikerUser;
+
     private Restaurant $restaurant;
+
     private Restaurant $otherRestaurant;
+
     private Biker $activeBiker;
+
     private Biker $secondBiker;
 
     protected function setUp(): void

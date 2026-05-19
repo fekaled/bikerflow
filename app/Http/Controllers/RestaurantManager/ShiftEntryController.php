@@ -18,6 +18,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class ShiftEntryController extends Controller
 {
     use AuthorizesRequests;
+
     /**
      * Display the manual trip entry form for a shift.
      *

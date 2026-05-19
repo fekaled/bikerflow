@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Contracts\PixGatewayInterface;
-use App\Contracts\VerifyKeyResponse;
 use App\Enums\PaymentAuditAction;
 use App\Enums\PaymentStatus;
 use App\Enums\ShiftStatus;
@@ -11,7 +10,6 @@ use App\Models\Payment;
 use App\Models\PaymentAuditLog;
 use App\Models\Shift;
 use App\Models\User;
-use App\Services\PixPaymentService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
