@@ -71,15 +71,18 @@ When the Admin clicks "Release All Eligible", the service iterates all `pending`
 
 ### Decision 4: Shift Auto-Transition Gates
 
-> **Origin:** Phase 3B + 3C
+> **Origin:** Phase 3B + 3C + 4B
 > **Extends ADR-001 state machine.**
 
 Two automatic shift state transitions occur as payments progress:
 
-| Trigger | Transition | Guard |
-|---------|------------|-------|
+| Trigger | Transition | Code Path |
+|---------|------------|-----------|
 | All payments for a shift are `processing` (or beyond) | `closed → approved` | `PaymentReleaseService::checkAndTransitionShiftToApproved` — called after each individual and batch release |
-| All payments for a shift are `paid` | `approved → paid` | `PaymentSettlementService::reconcileShiftStatus` — called after each mark-paid |
+| All payments for a shift are `paid` | `approved → paid` | `PaymentSettlementService::reconcileShiftStatus` — called after **manual** mark-paid |
+| All payments for a shift are `paid` | `approved → paid` | `PixPaymentService::reconcileShiftStatus` — called after **gateway auto-paid** (sync "processed" response) |
+
+> **Note (Phase 4B):** The `approved → paid` transition now has two trigger paths: (1) manual Admin mark-paid via the settlement dashboard, and (2) automatic gateway response when the PIX gateway returns `status = "processed"` synchronously. Both call the same `reconcileShiftStatus()` method, which is idempotent.
 
 Both transitions are:
 - **Guarded at the service layer** — short-circuit if shift is not in the expected source status.
@@ -108,6 +111,7 @@ A failed payment can be retried at most **3 times** (`retry_count` ceiling). The
 **Consequences:**
 - The payment lifecycle for a capped payment is: `pending → processing → failed → processing → failed → processing → failed` (terminal). The UI hides the "Tentar Novamente" button when `retry_count >= 3`.
 - The retry cap is enforced in the service layer, not the database — a future phase could raise or lower the cap without schema changes.
+- **Phase 4B:** On the 3rd retry (retry_count becomes 3), the auto-fail happens **without calling the gateway** — no money moves. The gateway is only called for retries where the cap has NOT been reached.
 
 ---
 
@@ -183,25 +187,33 @@ When retrying a failed payment, the service **re-runs the same `isEligibleForRel
 | Type | File | Phase | Role |
 |------|------|-------|------|
 | Service | `app/Services/ShiftCloseService.php` | 3A | Close review + batch Payment creation (D1, D2 warning tier) |
-| Service | `app/Services/PaymentReleaseService.php` | 3B | Release + eligibility hard block (D2 block tier, D3, D4) |
-| Service | `app/Services/PaymentSettlementService.php` | 3C | Mark paid/failed/retry + reconciliation (D4, D5, D6, D7) |
+| Service | `app/Services/PaymentReleaseService.php` | 3B/4B | Release + eligibility hard block (D2 block tier, D3, D4) + gateway call via `gatewayInitiateTransfer()` |
+| Service | `app/Services/PaymentSettlementService.php` | 3C/4B | Mark paid/failed/retry + reconciliation (D4, D5, D6, D7) + gateway call on retry + gateway fields in settlement data |
+| Service | `app/Services/PixPaymentService.php` | 4B | Gateway call orchestrator — initiateTransfer, auto-transition on sync responses, audit logging (D4 gateway path) |
+| Service | `app/Services/Gateway/MockPixGateway.php` | 4A/4B | Gateway mock — `.01`→processed, `.02`→failed, default→queued |
 | Migration | `database/migrations/2026_05_17_000001_add_failure_columns_to_payments_table.php` | 3C | `failed_at`, `failure_reason`, `retry_count` (D5, D6) |
-| Model | `app/Models/Payment.php` | 3A/3B/3C | `isEligibleForRelease()`, `isEligibleForRetry()`, fillable/casts (D2, D7) |
+| Migration | `database/migrations/2026_05_17_000002_add_gateway_columns_to_payments_table.php` | 4B | `gateway_transaction_id`, `gateway_status` for gateway reconciliation |
+| Model | `app/Models/Payment.php` | 3A/3B/3C/4B | `isEligibleForRelease()`, `isEligibleForRetry()`, fillable/casts (D2, D7) + gateway fields |
 | Model | `app/Models/Shift.php` | 3B/3C | `allPaymentsReleased()`, `allPaymentsPaid()` (D4) |
 | View | `resources/views/shifts/close-review.blade.php` | 3A | Close review with warnings (D1) |
-| View | `resources/views/shifts/payment-review.blade.php` | 3B | Payment release with block reasons (D2, D3) |
-| View | `resources/views/shifts/payment-status.blade.php` | 3C | Settlement dashboard with retry cap UI (D5) |
+| View | `resources/views/shifts/payment-review.blade.php` | 3B/4B | Payment release with block reasons (D2, D3) + gateway status badge |
+| View | `resources/views/shifts/payment-status.blade.php` | 3C/4B | Settlement dashboard with retry cap UI (D5) + gateway txn ID + status |
 | Request | `app/Http/Requests/ConfirmCloseShiftRequest.php` | 3A | `confirmed` field validation (D1) |
 | Request | `app/Http/Requests/MarkFailedRequest.php` | 3C | `failure_reason` validation (D6) |
 | Request | `app/Http/Requests/RetryPaymentRequest.php` | 3C | Retry authorization (D5, D7) |
 | Policy | `app/Policies/ShiftPolicy.php` | 3A/3B/3C | Admin-only guards for all actions |
 | Controller | `app/Http/Controllers/Admin/ShiftController.php` | 3A/3B/3C | All payout lifecycle endpoints |
+| Enum | `app/Enums/PaymentAuditAction.php` | 4A/4B | `VerifyPix` + `GatewayAttempt` enum cases |
 | Test | `tests/Unit/Services/ShiftCloseServiceTest.php` | 3A | 35 unit tests |
 | Test | `tests/Unit/Services/PaymentReleaseServiceTest.php` | 3B | Unit tests |
-| Test | `tests/Unit/Services/PaymentSettlementServiceTest.php` | 3C | 21 unit tests |
+| Test | `tests/Unit/Services/PaymentSettlementServiceTest.php` | 3C/4B | 51 unit tests |
+| Test | `tests/Unit/Services/PixPaymentServiceTest.php` | 4B | 38 unit tests |
 | Test | `tests/Feature/Controllers/ShiftCloseControllerTest.php` | 3A | 49 feature tests |
 | Test | `tests/Feature/Controllers/PaymentReleaseControllerTest.php` | 3B | Feature tests |
 | Test | `tests/Feature/Controllers/PaymentSettlementControllerTest.php` | 3C | 25 feature tests |
+| Test | `tests/Feature/Controllers/PixPaymentControllerTest.php` | 4B | 25 feature tests |
+| Test | `tests/Feature/Controllers/PaymentReleaseWithGatewayTest.php` | 4B | 9 feature tests |
+| Test | `tests/Feature/Controllers/PaymentRetryWithGatewayTest.php` | 4B | 10 feature tests |
 
 ---
 
@@ -212,8 +224,9 @@ This ADR consolidates decisions underlying the following ACs:
 - **Phase 3A:** AC-3A-01 through AC-3A-44 (close review, payout creation, eligibility warnings)
 - **Phase 3B:** AC-3B-01 through AC-3B-46 (payment release, eligibility hard block, batch skip, auto-transition to approved)
 - **Phase 3C:** AC-3C-01 through AC-3C-48 (mark paid/failed, retry cap, auto-fail, auto-transition to paid, re-eligibility)
+- **Phase 4B:** AC-4B-01 through AC-4B-50 (gateway integration, auto-transition on sync response, gateway audit trail, settlement dashboard updates)
 
-Total: **138 acceptance criteria** across three phases.
+Total: **188 acceptance criteria** across four phases.
 
 ---
 
@@ -224,8 +237,11 @@ Total: **138 acceptance criteria** across three phases.
 - Plan: `docs/plans/phase-3a-shift-close-payout-calculation.md`
 - Plan: `docs/plans/phase-3b-payment-release-admin-approval.md`
 - Plan: `docs/plans/phase-3c-payment-failure-and-retry.md`
+- Plan: `docs/plans/phase-4b-pix-payment-execution.md`
 - Audit: `docs/audits/phase-3a-shift-close-payout-calculation-audit.md`
 - Audit: `docs/audits/phase-3b-payment-release-admin-approval-audit.md`
+- Audit: `docs/audits/phase-3c-audit.md`
+- Audit: `docs/audits/phase-4b-pix-payment-execution-audit.md`
 - Audit: `docs/audits/phase-3c-audit.md`
 - PRD Sections 2C, 4 (BR-02, BR-03, BR-04, BR-06)
 - Tech Doc Sections 3, 5 (Business Logic, Security & Guardrails)

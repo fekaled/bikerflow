@@ -1,8 +1,7 @@
 # BikerFlow — Project Progress Board
 
-> **Last Updated:** 2026-05-18 (Phase 4A — 🟢 Validated, Approved for Merge)
-> **Last Updated:** 2026-05-17 (Planner — Phase 4C Blueprint Produced)
-> **Current Phase:** Phase 4A (🟡 Planned) → Phase 4B (🟡 Planned) → Phase 4C (🟡 Planned) → Ready for implementation
+> **Last Updated:** 2026-05-18 (Phase 4B — 🟢 Validated, PASS WITH CONDITIONS)
+> **Current Phase:** Phase 4C (🟡 Planned) → Ready for implementation
 
 ---
 
@@ -20,7 +19,7 @@
 | **Phase 3B** | Payment Release & Admin Approval — approve + release to processing | 🟢 Validated |
 | **Phase 3C** | Payment Failure Handling & Retry — PIX failure, retry logic, hard cap | 🟢 Validated |
 | **Phase 4A** | PIX Gateway Interface & Key Verification | 🟢 Validated |
-| **Phase 4B** | PIX Payment Execution (Automated Settlement) | 🟡 Planned |
+| **Phase 4B** | PIX Payment Execution (Automated Settlement) | 🟢 Validated |
 | **Phase 4C** | PIX Webhooks & Async Status Updates | 🟡 Planned |
 | **Phase 5** | Dashboards & Notifications — Admin margin, biker status | 🔵 Not Started |
 
@@ -40,7 +39,7 @@
 | Phase-3B | Payment Release & Admin Approval | 🟢 Validated | `docs/plans/phase-3b-payment-release-admin-approval.md` | `PaymentReleaseServiceTest`, `PaymentReleaseControllerTest` | ✅ 86 pass, 774 total suite, 0 regressions | `docs/audits/phase-3b-payment-release-admin-approval-audit.md` |
 | Phase-3C | Payment Failure Handling & Retry | 🟢 Validated | `docs/plans/phase-3c-payment-failure-and-retry.md` | `PaymentSettlementServiceTest` (51 unit), `PaymentSettlementControllerTest` (45 feature) | ✅ 96 pass, 0 regressions | `docs/audits/phase-3c-audit.md` |
 | Phase-4A | PIX Gateway Interface & Key Verification | 🟢 Validated | `docs/plans/phase-4a-pix-gateway-key-verification.md` | ✅ 107 pass (4 test files: `MockPixGatewayTest`, `PixVerificationServiceTest`, `PixKeyControllerTest`, `PixConfigTest`), 225 assertions | ✅ Validated | `docs/audits/phase-4a-pix-gateway-key-verification-audit.md` |
-| Phase-4B | PIX Payment Execution (Automated Settlement) | 🟡 Planned | `docs/plans/phase-4b-pix-payment-execution.md` | — | — | — |
+| Phase-4B | PIX Payment Execution (Automated Settlement) | 🟢 Validated | `docs/plans/phase-4b-pix-payment-execution.md` | `PixPaymentServiceTest` (38 unit), `PixPaymentControllerTest` (25 feature), `PaymentReleaseWithGatewayTest` (9), `PaymentRetryWithGatewayTest` (10) | ✅ 82 pass (300+ assertions), 0 regressions in payment suite | `docs/audits/phase-4b-pix-payment-execution-audit.md` |
 | Phase-4C | PIX Webhooks & Async Status Updates | 🟡 Planned | `docs/plans/phase-4c-pix-webhooks-async-status.md` | — | — | — |
 | US-01 | PDF Trip Sheet for manual tracking | 🔵 Not Started | — | — | — | — |
 | US-02 | Holiday shift rate override | 🔵 Not Started | — | — | — | — |
@@ -54,11 +53,11 @@
 | ID | Rule | Status | Enforced In | Verified By |
 |----|------|--------|-------------|-------------|
 | BR-01 | Workflow Locking | 🟢 Validated | `app/Models/Shift.php` (boot saving hook) + `TickTripRequest` (BR-01 live_tick guard) + `SubmitTripsRequest` (BR-01 manual_entry guard) | Phase-1 audit (AC-36→AC-38a), Phase-2D, Phase-2E (AC-2E-11, AC-2E-12) |
-| BR-02 | PIX Verification | 🟩 Tests GREEN (Phase 4A implementation complete) | Schema: `pix_keys` table (is_verified, verified_at) + Phase 3A: eligibility warnings on close review + Phase 3B: hard block on release for unverified PIX + Phase 3C: re-check on retry via `Payment::isEligibleForRetry()` + **Phase 4A: Admin verification/unverification endpoints, PixVerificationService, MockPixGateway, audit trail** | Phase-4A unit tests (AC-4A-11→AC-4A-21, AC-4A-26→AC-4A-33, AC-4A-42→AC-4A-44) |
+| BR-02 | PIX Verification | 🟢 Validated | Schema: `pix_keys` table (is_verified, verified_at) + Phase 3A: eligibility warnings on close review + Phase 3B: hard block on release for unverified PIX + Phase 3C: re-check on retry via `Payment::isEligibleForRetry()` + Phase 4A: Admin verification/unverification endpoints, PixVerificationService, MockPixGateway, audit trail + **Phase 4B: PixPaymentService resolves verified PIX key at gateway call time** | Phase-4A unit tests + Phase-4B unit tests (AC-4B-14, AC-4B-15) |
 | BR-03 | Manual Release (Payout Formula) | 🟢 Validated | `app/Services/PayoutService.php` + `app/Services/RevenueService.php` + Phase 3A: `ShiftCloseService` batch integration, payments created in `pending` status only | Phase-1 audit + BR-03 audit + Phase 3A audit |
-| BR-04 | Granular Payment Failure | 🟩 Tests GREEN | Schema: Payment per shift_biker (HasOne), independent status + Phase 3A: batch Payment creation via `ShiftCloseService`, `firstOrCreate` idempotency guard + Phase 3C: independent failure/success, shift never regresses on single failure | Phase-1 audit (schema) + Phase 3A audit (enforcement) + Phase 3C unit/feature tests (AC-3C-26, AC-3C-38) |
+| BR-04 | Granular Payment Failure | 🟢 Validated | Schema: Payment per shift_biker (HasOne), independent status + Phase 3A: batch Payment creation via `ShiftCloseService`, `firstOrCreate` idempotency guard + Phase 3C: independent failure/success, shift never regresses on single failure + **Phase 4B: gateway failure auto-fails only that payment, PixPaymentService does NOT touch shift.status on fail** | Phase-1 audit (schema) + Phase 3A audit (enforcement) + Phase 3C unit/feature tests (AC-3C-26, AC-3C-38) + Phase-4B unit tests (AC-4B-28) |
 | BR-05 | Last Minute Biker (Admin Only) | 🟢 Validated | `app/Policies/ShiftPolicy.php` (addBiker), `app/Providers/AppServiceProvider.php` (manage-shift-bikers gate), `app/Http/Controllers/Admin/ShiftBikerController.php`, `app/Http/Requests/AssignBikerRequest.php` | Phase-2A (AC-30, AC-34), Phase-2C (AC-2C-01→AC-2C-07, AC-2C-32→AC-2C-38) |
-| BR-06 | Payment Retry Audit Logging | 🟩 Tests GREEN | Schema: `payment_audit_logs.transaction_ref` UNIQUE + Phase 3C: every settlement transition writes unique audit log (succeed/fail/retry), hard cap at 3 retries, auto-fail on cap | Phase-1 audit (AC-08, BR-06) + Phase 3C unit/feature tests (AC-3C-42 through AC-3C-46) |
+| BR-06 | Payment Retry Audit Logging | 🟢 Validated | Schema: `payment_audit_logs.transaction_ref` UNIQUE + Phase 3C: every settlement transition writes unique audit log (succeed/fail/retry), hard cap at 3 retries, auto-fail on cap + **Phase 4B: every gateway attempt writes `PaymentAuditAction::GatewayAttempt` with UUID-based `transaction_ref`, succeed/fail actions with `source = "gateway_auto"`** | Phase-1 audit (AC-08, BR-06) + Phase 3C unit/feature tests (AC-3C-42 through AC-3C-46) + Phase-4B unit tests (AC-4B-33, AC-4B-34) |
 
 ---
 
@@ -76,7 +75,7 @@
 | AssignBikerRequest | — | — | ✅ `app/Http/Requests/AssignBikerRequest.php` | — | `ShiftBikerControllerTest` | 🟢 Validated |
 | UpdateShiftBikerRequest | — | — | ✅ `app/Http/Requests/UpdateShiftBikerRequest.php` | — | `ShiftBikerControllerTest` | 🟢 Validated |
 | PixKey | ✅ `2026_05_14_000005` | ✅ `app/Models/PixKey.php` | — | — | `PixKeyModelTest`, `FactoryTest` | 🟢 Validated |
-| Payment | ✅ `2026_05_14_000006`, `2026_05_17_000001` | ✅ `app/Models/Payment.php` (+`isEligibleForRetry()`) | ✅ `ShiftController` (paymentStatus, markPaid, markFailed, retryPayment) | ✅ `routes/web.php` (4 admin routes) | `PaymentModelTest`, `FactoryTest`, `PaymentSettlementServiceTest`, `PaymentSettlementControllerTest` | 🟩 Tests GREEN |
+| Payment | ✅ `2026_05_14_000006`, `2026_05_17_000001`, `2026_05_17_000002` (gateway cols) | ✅ `app/Models/Payment.php` (+`isEligibleForRetry()`, `gateway_transaction_id`, `gateway_status`) | ✅ `ShiftController` (paymentStatus, markPaid, markFailed, retryPayment) | ✅ `routes/web.php` (4 admin routes) | `PaymentModelTest`, `FactoryTest`, `PaymentSettlementServiceTest`, `PaymentSettlementControllerTest`, `PixPaymentServiceTest` | 🟢 Validated |
 | PaymentAuditLog | ✅ `2026_05_14_000007` | ✅ `app/Models/PaymentAuditLog.php` | — | — | `PaymentAuditLogModelTest`, `FactoryTest` | 🟢 Validated |
 | User (auth) | ✅ `2026_05_14_000008` (alter), `2026_05_14_000009` (FK) | ✅ `app/Models/User.php` | ✅ `app/Http/Controllers/Auth/MagicLinkController.php` | ✅ `routes/web.php` (auth routes) | `UserModelTest`, `MagicLinkTest`, `RoleMiddlewareTest`, `GatesPoliciesTest`, `UserRoleEnumTest` | 🟢 Validated |
 | UserRole | ✅ `app/Enums/UserRole.php` | — | — | — | `UserRoleEnumTest` | 🟢 Validated |
@@ -92,11 +91,15 @@
 | ShiftCloseService | ✅ `app/Services/ShiftCloseService.php` | ✅ `app/Http/Controllers/Admin/ShiftController.php` (reviewClose, confirmClose) | ✅ `routes/web.php` (shifts.close.review) | `ShiftCloseServiceTest` (35 tests) | 🟢 Validated |
 | ConfirmCloseShiftRequest | — | ✅ `app/Http/Requests/ConfirmCloseShiftRequest.php` | — | `ShiftCloseControllerTest` | 🟢 Validated |
 | Close Review View | — | — | ✅ `resources/views/shifts/close-review.blade.php` | `ShiftCloseControllerTest` (49 tests) | 🟢 Validated |
-| PaymentSettlementService | — | ✅ `app/Services/PaymentSettlementService.php` | ✅ `ShiftController` (paymentStatus, markPaid, markFailed, retryPayment) | ✅ `routes/web.php` (4 admin settlement routes) | `PaymentSettlementServiceTest` (51 unit tests) | 🟩 Tests GREEN |
+| PaymentSettlementService | — | ✅ `app/Services/PaymentSettlementService.php` (+gateway call in retry, +gateway fields in getSettlementData) | ✅ `ShiftController` (paymentStatus, markPaid, markFailed, retryPayment) | ✅ `routes/web.php` (4 admin settlement routes) | `PaymentSettlementServiceTest` (51 unit tests), `PaymentRetryWithGatewayTest` (10) | 🟢 Validated |
 | MarkPaidRequest | — | — | ✅ `app/Http/Requests/MarkPaidRequest.php` | — | `PaymentSettlementControllerTest` | 🟩 Tests GREEN |
 | MarkFailedRequest | — | — | ✅ `app/Http/Requests/MarkFailedRequest.php` | — | `PaymentSettlementControllerTest` | 🟩 Tests GREEN |
 | RetryPaymentRequest | — | — | ✅ `app/Http/Requests/RetryPaymentRequest.php` | — | `PaymentSettlementControllerTest` | 🟩 Tests GREEN |
-| Payment Status View | — | — | — | ✅ `resources/views/shifts/payment-status.blade.php` | `PaymentSettlementControllerTest` | 🟩 Tests GREEN |
+| Payment Status View | — | — | — | ✅ `resources/views/shifts/payment-status.blade.php` (+gateway txn ID + status badges) | `PaymentSettlementControllerTest`, `PixPaymentControllerTest` | 🟢 Validated |
+| PixPaymentService | — | ✅ `app/Services/PixPaymentService.php` | — | — | `PixPaymentServiceTest` (38 unit tests) | 🟢 Validated |
+| MockPixGateway (extended) | — | ✅ `app/Services/Gateway/MockPixGateway.php` (+3 response scenarios) | — | — | `MockPixGatewayTest` | 🟢 Validated |
+| PaymentAuditAction (extended) | — | — | — | — | `EnumTest` | 🟢 Validated |
+| PaymentReview View | — | — | — | ✅ `resources/views/shifts/payment-review.blade.php` (+gateway status badge) | `PaymentReleaseControllerTest` | 🟢 Validated |
 
 ---
 
@@ -158,6 +161,8 @@ merge to main       →  Orchestrator merges              →  ✅ Done
 
 | Date | Agent | Action | Details |
 |------|-------|--------|---------|
+| 2026-05-18 | Validator | Audited Phase 4B — 🟢 PASS WITH CONDITIONS | 82 Phase 4B tests pass (38 unit + 25 feature + 9 release gateway + 10 retry gateway), 300+ assertions. All 50 ACs verified (AC-4B-01 through AC-4B-50). BR-02 (verified PIX key resolved at gateway call time), BR-03 (manual release trigger preserved), BR-04 (gateway failure does NOT touch shift.status), BR-06 (every gateway attempt writes unique PaymentAuditLog) all enforced. PixPaymentService: processed→auto-paid with shift reconciliation, failed→auto-failed, queued→stays processing, exception→gateway_status=error. MockPixGateway: `.01`→processed, `.02`→failed, default→queued. 3 Medium findings: (M-1) `payment-status.blade.php` column misalignment — **fixed**, (M-2) Phase 4A `MockPixGatewayTest` regression from timestamp in txn ID — **fixed**, (M-3) Phase 3B `payment-review.blade.php` sr-only span removed — **fixed**. 1 Low finding: MockPixGateway `.02` returns `success: true` vs plan's `success: false` — no functional impact (PixPaymentService checks status, not success). No Critical/High. Audit: `docs/audits/phase-4b-pix-payment-execution-audit.md`. Approved for merge. |
+| 2026-05-18 | Developer | Phase 4B implementation complete — all tests GREEN | 82 tests pass across 4 test files. Files created: `app/Services/PixPaymentService.php` (gateway call orchestrator with auto-transition), `database/migrations/2026_05_17_000002_add_gateway_columns_to_payments_table.php`. Files modified: `app/Models/Payment.php` (gateway_transaction_id, gateway_status fillable/casts), `app/Services/Gateway/MockPixGateway.php` (extended with 3 response scenarios), `app/Services/PaymentReleaseService.php` (+constructor injection + gatewayInitiateTransfer), `app/Services/PaymentSettlementService.php` (+gateway call in retry + gateway fields in getSettlementData), `app/Enums/PaymentAuditAction.php` (+GatewayAttempt), `resources/views/shifts/payment-status.blade.php` (+gateway columns), `resources/views/shifts/payment-review.blade.php` (+gateway badge). Note: `PixPaymentControllerTest.php` was developer-written (not tester-authored) — tester only wrote `PixPaymentServiceTest.php` (38 unit tests). |
 | 2026-05-17 | Planner | Produced Phase 4C blueprint | Plan at `docs/plans/phase-4c-pix-webhooks-async-status.md`. Covers: `PixWebhookController` (public POST endpoint), `VerifyPixWebhookSignature` middleware (HMAC sha256), `PixWebhookService` (idempotent status updates), `PixWebhookLog` model + migration (operational debugging), `MockPixGateway::checkPaymentStatus()` extended, `pix:webhook:verify` artisan command for manual Admin status checks, `config/pix.php` webhook section (secret, algorithm, IP whitelist). 59 acceptance criteria (AC-4C-01 through AC-4C-59). Complex. Idempotency: duplicate webhooks are no-ops, not errors. Webhook always returns 200 (prevents gateway retry loops). Signature failures return 401. Shift reconciliation on async success. Phase 4A + 4B dependency chain complete. Next: Implementation (4A → 4B → 4C). |
 | 2026-05-17 | Planner | Produced Phase 4B blueprint | Plan at `docs/plans/phase-4b-pix-payment-execution.md`. Covers: `PixPaymentService` (gateway call orchestrator with auto-transition on sync responses), migration for `gateway_transaction_id` + `gateway_status` on payments, integration hooks into `PaymentReleaseService::releasePayment()` and `PaymentSettlementService::retry()`, extended `MockPixGateway::initiatePayment()` with three response scenarios (processed/failed/queued), `PaymentAuditAction::GatewayAttempt` enum case, settlement dashboard updates for gateway fields. 50 acceptance criteria (AC-4B-01 through AC-4B-50). Complex. Sync gateway success → auto-paid, sync failure → auto-failed, async queued → stays processing (Phase 4C). Manual fallback preserved. No open questions. Depends on Phase 4A gateway interface. Next: Phase 4C plan. |
 | 2026-05-17 | Planner | Produced Phase 4A blueprint | Plan at `docs/plans/phase-4a-pix-gateway-key-verification.md`. Covers: `PixGatewayInterface` contract (verifyKey, initiatePayment, checkPaymentStatus), `MockPixGateway` implementation, `PixVerificationService` (verify/unverify BR-02), `PixKeyController` (3 admin endpoints), Blade view for PIX key management, `config/pix.php` gateway driver config, `PixGatewayServiceProvider` container binding, `PaymentAuditAction::VerifyPix` enum case. 47 acceptance criteria (AC-4A-01 through AC-4A-47). 2 open questions (unverify capability, multiple keys per biker). Medium complexity. Gateway stubs for initiatePayment/checkPaymentStatus ready for Phase 4B/4C. Next: Tester writes RED tests. |

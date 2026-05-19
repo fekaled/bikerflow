@@ -15,6 +15,18 @@
         'paid' => 'bg-green-100 text-green-800',
         'failed' => 'bg-red-100 text-red-800',
     ];
+    $gatewayStatusLabels = [
+        'processed' => 'Processado',
+        'queued' => 'Na fila',
+        'error' => 'Erro',
+        'failed' => 'Falhou',
+    ];
+    $gatewayStatusColors = [
+        'processed' => 'bg-green-100 text-green-800',
+        'queued' => 'bg-blue-100 text-blue-800',
+        'error' => 'bg-orange-100 text-orange-800',
+        'failed' => 'bg-red-100 text-red-800',
+    ];
 @endphp
 
 @section('content')
@@ -92,8 +104,13 @@
                             <td class="py-2 px-3">
                                 <span class="inline-block {{ $statusColors[$item['payment']->status->value] ?? 'bg-gray-100 text-gray-800' }} text-xs px-2 py-1 rounded">
                                     {{ $statusLabels[$item['payment']->status->value] ?? $item['payment']->status->value }}
-                                    <span class="sr-only">{{ $item['payment']->status->value }}</span>
+                                    <span class="sr-only">({{ $item['payment']->status->value }})</span>
                                 </span>
+                                @if($item['payment']->status->value === 'processing' && $item['payment']->gateway_status)
+                                    <span class="inline-block ml-1 {{ $gatewayStatusColors[$item['payment']->gateway_status] ?? 'bg-gray-100 text-gray-800' }} text-xs px-2 py-1 rounded">
+                                        PIX: {{ $gatewayStatusLabels[$item['payment']->gateway_status] ?? $item['payment']->gateway_status }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="py-2 px-3">
                                 @foreach($item['blockReasons'] as $reason)

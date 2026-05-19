@@ -453,7 +453,8 @@ class PaymentReleaseControllerTest extends TestCase
         $this->actingAs($this->admin)
             ->post(route('shifts.payments.release', [$shift, $payment]));
 
-        $this->assertDatabaseCount('payment_audit_logs', 1);
+        // Phase 4B: Release creates Release audit log + PixPaymentService creates GatewayAttempt audit log
+        $this->assertDatabaseCount('payment_audit_logs', 2);
         $this->assertDatabaseHas('payment_audit_logs', [
             'payment_id' => $payment->id,
         ]);
@@ -858,7 +859,8 @@ class PaymentReleaseControllerTest extends TestCase
         $this->actingAs($this->admin)
             ->post(route('shifts.payments.release', [$shift, $payment]));
 
-        $this->assertDatabaseCount('payment_audit_logs', 1);
+        // Phase 4B: Release creates Release audit log + PixPaymentService creates GatewayAttempt audit log
+        $this->assertDatabaseCount('payment_audit_logs', 2);
     }
 
     // AC-3B-46: Failed release does NOT create audit log

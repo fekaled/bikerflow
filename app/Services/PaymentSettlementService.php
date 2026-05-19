@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Contracts\PixGatewayInterface;
+use App\Contracts\VerifyKeyResponse;
 use App\Enums\PaymentAuditAction;
 use App\Enums\PaymentStatus;
 use App\Enums\ShiftStatus;
@@ -9,6 +11,7 @@ use App\Models\Payment;
 use App\Models\PaymentAuditLog;
 use App\Models\Shift;
 use App\Models\User;
+use App\Services\PixPaymentService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -24,6 +27,10 @@ use Illuminate\Support\Str;
  */
 class PaymentSettlementService
 {
+    public function __construct(
+        private readonly ?PixGatewayInterface $gateway = null
+    ) {}
+
     /**
      * Returns dashboard data for the per-shift settlement view.
      * Groups payments by current status.
@@ -58,6 +65,8 @@ class PaymentSettlementService
                 'isEligibleForRetry' => $payment->status === PaymentStatus::Failed
                     && $payment->isEligibleForRetry()
                     && $payment->retry_count < 3,
+                'gateway_transaction_id' => $payment->gateway_transaction_id,
+                'gateway_status' => $payment->gateway_status,
             ];
 
             match ($payment->status) {
@@ -229,6 +238,7 @@ class PaymentSettlementService
 
             // OQ-3C-01: If this was the 3rd retry (retry_count now == 3),
             // immediately mark as permanently failed.
+            // NO gateway call — cap exceeded, manual intervention required.
             if ($retryCapReached) {
                 $payment->status = PaymentStatus::Failed;
                 $payment->failed_at = now();
@@ -244,10 +254,26 @@ class PaymentSettlementService
                         'retry_count' => $payment->retry_count,
                     ],
                 ]);
+
+                return $payment;
             }
 
-            return $payment;
+            // Phase 4B: Initiate gateway transfer after retry transitions to processing
+            $this->gatewayInitiateTransfer($payment, $admin);
+
+            return $payment->refresh();
         });
+    }
+
+    /**
+     * Resolve the gateway and call initiateTransfer.
+     * Uses injected gateway if available, otherwise resolves from container.
+     * This allows tests to inject a mock without affecting the global container.
+     */
+    private function gatewayInitiateTransfer(Payment $payment, User $admin): void
+    {
+        $gateway = $this->gateway ?? app(PixGatewayInterface::class);
+        (new PixPaymentService($gateway))->initiateTransfer($payment, $admin);
     }
 
     /**

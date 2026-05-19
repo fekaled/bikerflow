@@ -984,15 +984,16 @@ class PaymentSettlementControllerTest extends TestCase
         $this->actingAs($this->admin)
             ->post(route('shifts.payments.retry', [$shift, $payment]));
 
-        $this->assertEquals(2, PaymentAuditLog::where('payment_id', $payment->id)->count());
+        // Phase 4B: retry() calls PixPaymentService which creates GatewayAttempt audit log
+        $this->assertEquals(3, PaymentAuditLog::where('payment_id', $payment->id)->count());
 
         // Mark as paid
         $payment->refresh();
         $this->actingAs($this->admin)
             ->post(route('shifts.payments.mark-paid', [$shift, $payment]));
 
-        $this->assertEquals(3, PaymentAuditLog::where('payment_id', $payment->id)->count(),
-            'AC-3C-42: 3 audit logs for fail+retry+pay');
+        $this->assertEquals(4, PaymentAuditLog::where('payment_id', $payment->id)->count(),
+            'AC-3C-42: 4 audit logs for fail+retry+GatewayAttempt+succeed (Phase 4B)');
     }
 
     /**
@@ -1100,11 +1101,12 @@ class PaymentSettlementControllerTest extends TestCase
         $this->assertEquals(ShiftStatus::Paid, $shift->fresh()->status,
             'Smoke test: Shift must be paid after all payments settled');
 
-        // 6. Verify audit trail — 7 audit logs total:
-        //    pay1: succeed(1), pay2: fail(1) + retry(1) + succeed(1), pay3: succeed(1)
+        // 6. Verify audit trail — 6 audit logs total:
+        //    pay1: succeed(1), pay2: fail(1) + retry(1) + GatewayAttempt(1) + succeed(1), pay3: succeed(1)
+        //    Phase 4B: retry() calls PixPaymentService which creates GatewayAttempt audit log
         $totalLogs = PaymentAuditLog::whereIn('payment_id', collect($payments)->pluck('id'))->count();
-        $this->assertEquals(5, $totalLogs,
-            'Smoke test: 5 audit logs for the full cycle');
+        $this->assertEquals(6, $totalLogs,
+            'Smoke test: 6 audit logs for the full cycle');
     }
 
     // ========================================================================

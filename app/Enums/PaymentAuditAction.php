@@ -11,4 +11,5 @@ enum PaymentAuditAction: string
     case Fail = 'fail';
     case Succeed = 'succeed';
     case VerifyPix = 'verify_pix';
+    case GatewayAttempt = 'gateway_attempt';
 }

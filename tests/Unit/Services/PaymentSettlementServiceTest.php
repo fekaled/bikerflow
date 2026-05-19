@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Contracts\PixGatewayInterface;
 use App\Enums\PaymentAuditAction;
 use App\Enums\PaymentStatus;
 use App\Enums\ShiftStatus;
@@ -14,6 +15,7 @@ use App\Models\Restaurant;
 use App\Models\Shift;
 use App\Models\ShiftBiker;
 use App\Models\User;
+use App\Services\Gateway\MockPixGateway;
 use App\Services\PaymentSettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -54,6 +56,12 @@ class PaymentSettlementServiceTest extends TestCase
         $this->admin = User::factory()->create([
             'role' => UserRole::Admin,
         ]);
+
+        // Phase 4B: Bind MockPixGateway so PaymentSettlementService can resolve it
+        // Inject gateway directly into service via constructor (avoids polluting container)
+        $this->app->instance(PaymentSettlementService::class, new PaymentSettlementService(
+            new MockPixGateway()
+        ));
     }
 
     // ========================================================================
@@ -981,6 +989,9 @@ class PaymentSettlementServiceTest extends TestCase
 
     /**
      * AC-3C-42: Every successful settlement transition writes exactly one audit log.
+     * 
+     * NOTE: Phase 4B gateway integration creates a gateway_attempt log alongside retry,
+     * so retry() produces 2 logs (retry + gateway_attempt) instead of 1.
      */
     public function test_every_successful_transition_creates_audit_log(): void
     {
@@ -995,24 +1006,26 @@ class PaymentSettlementServiceTest extends TestCase
         $this->assertEquals(1, PaymentAuditLog::where('payment_id', $payment->id)->count(),
             'AC-3C-42: 1 audit log after mark-failed');
 
-        // Retry — need to reload payment as it's now failed with retry_count=0
-        // But retry_count on the failed payment is 0 from assignment, so retry sets to 1
+        // Retry — Phase 4B: retry() creates retry + gateway_attempt = 2 logs
+        // Plus the existing fail log = 3 total
         $fresh = $payment->fresh();
         $service->retry($fresh, $this->admin);
-        // 2 logs now: 1 fail + 1 retry
-        $this->assertEquals(2, PaymentAuditLog::where('payment_id', $payment->id)->count(),
-            'AC-3C-42: 2 audit logs after retry');
+        $this->assertEquals(3, PaymentAuditLog::where('payment_id', $payment->id)->count(),
+            'AC-3C-42: 3 audit logs after retry (fail + retry + gateway_attempt)');
 
         // Mark as paid (payment is now processing after retry)
         $fresh = $payment->fresh();
         $service->markPaid($fresh, $this->admin);
-        // 3 logs now: 1 fail + 1 retry + 1 succeed
-        $this->assertEquals(3, PaymentAuditLog::where('payment_id', $payment->id)->count(),
-            'AC-3C-42: 3 audit logs after mark-paid');
+        // 4 logs now: fail + retry + gateway_attempt + succeed
+        $this->assertEquals(4, PaymentAuditLog::where('payment_id', $payment->id)->count(),
+            'AC-3C-42: 4 audit logs after mark-paid');
     }
 
     /**
      * AC-3C-43: transaction_ref is unique across all audit log rows.
+     * 
+     * NOTE: Phase 4B gateway integration creates gateway_attempt logs,
+     * so markFailed + retry creates 3 logs (fail + retry + gateway_attempt).
      */
     public function test_transaction_ref_unique_across_all_audit_logs(): void
     {
@@ -1026,8 +1039,12 @@ class PaymentSettlementServiceTest extends TestCase
         $fresh = $payment->fresh();
         $service->retry($fresh, $this->admin);
 
-        // Check all audit logs for this payment have unique transaction_refs
+        // Phase 4B: markFailed creates 1 log, retry() creates 2 logs (retry + gateway_attempt)
+        // Total = 3 logs, all must have unique transaction_refs
         $logs = PaymentAuditLog::where('payment_id', $payment->id)->get();
+        $this->assertCount(3, $logs,
+            'AC-3C-43: 3 audit logs (fail + retry + gateway_attempt)');
+        
         $refs = $logs->pluck('transaction_ref')->toArray();
         $this->assertEquals(count($refs), count(array_unique($refs)),
             'AC-3C-43: All transaction_refs must be unique');

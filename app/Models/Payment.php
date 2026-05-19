@@ -29,6 +29,8 @@ class Payment extends Model
         'failed_at',
         'failure_reason',
         'retry_count',
+        'gateway_transaction_id',
+        'gateway_status',
     ];
 
     protected $attributes = [
@@ -45,6 +47,8 @@ class Payment extends Model
             'paid_at' => 'datetime',
             'failed_at' => 'datetime',
             'retry_count' => 'integer',
+            'gateway_transaction_id' => 'string',
+            'gateway_status' => 'string',
         ];
     }
 

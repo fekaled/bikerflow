@@ -15,6 +15,18 @@
         'paid' => 'bg-green-100 text-green-800',
         'failed' => 'bg-red-100 text-red-800',
     ];
+    $gatewayStatusLabels = [
+        'processed' => 'Processado',
+        'queued' => 'Na fila',
+        'error' => 'Erro',
+        'failed' => 'Falhou',
+    ];
+    $gatewayStatusColors = [
+        'processed' => 'bg-green-100 text-green-800',
+        'queued' => 'bg-blue-100 text-blue-800',
+        'error' => 'bg-orange-100 text-orange-800',
+        'failed' => 'bg-red-100 text-red-800',
+    ];
 @endphp
 
 @section('content')
@@ -76,6 +88,7 @@
                         <th class="py-2 px-3">Entregador</th>
                         <th class="py-2 px-3">Valor</th>
                         <th class="py-2 px-3">Status</th>
+                        <th class="py-2 px-3">PIX Gateway / ID Transação</th>
                         <th class="py-2 px-3">Ações</th>
                     </tr>
                 </thead>
@@ -88,6 +101,18 @@
                                 <span class="inline-block {{ $statusColors[$item['payment']->status->value] ?? 'bg-gray-100 text-gray-800' }} text-xs px-2 py-1 rounded">
                                     {{ $statusLabels[$item['payment']->status->value] ?? $item['payment']->status->value }}
                                 </span>
+                                @if($item['payment']->gateway_status)
+                                    <span class="inline-block ml-1 {{ $gatewayStatusColors[$item['payment']->gateway_status] ?? 'bg-gray-100 text-gray-800' }} text-xs px-2 py-1 rounded">
+                                        PIX: {{ $gatewayStatusLabels[$item['payment']->gateway_status] ?? $item['payment']->gateway_status }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-2 px-3 text-sm">
+                                @if($item['payment']->gateway_transaction_id)
+                                    <span class="text-gray-500" title="ID Transação Gateway">
+                                        {{ Str::limit($item['payment']->gateway_transaction_id, 20) }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="py-2 px-3 flex gap-2">
                                 <form method="POST" action="{{ route('shifts.payments.mark-paid', [$shift, $item['payment']]) }}" style="display:inline;">
