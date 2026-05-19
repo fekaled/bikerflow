@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\MarginDashboardController;
 use App\Http\Controllers\Admin\PixKeyController;
 use App\Http\Controllers\Admin\ShiftBikerController;
 use App\Http\Controllers\Admin\ShiftController;
@@ -82,4 +83,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('admin/bikers/{biker}/pix-keys', [PixKeyController::class, 'index'])->name('admin.bikers.pix-keys.index');
     Route::post('admin/pix-keys/{pixKey}/verify', [PixKeyController::class, 'verify'])->name('admin.pix-keys.verify');
     Route::post('admin/pix-keys/{pixKey}/unverify', [PixKeyController::class, 'unverify'])->name('admin.pix-keys.unverify');
+
+    // Phase 5A: Admin Margin Dashboard
+    Route::get('/admin/margin-dashboard', [MarginDashboardController::class, 'index'])->name('margin-dashboard');
 });
