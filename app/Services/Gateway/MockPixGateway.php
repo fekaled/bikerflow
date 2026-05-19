@@ -42,13 +42,82 @@ class MockPixGateway implements PixGatewayInterface
     /**
      * Initiate a mock PIX payment.
      *
-     * Stub for Phase 4B — always returns "queued" status.
+     * Deterministic mock based on amount patterns and pixKey for testing:
+     *
+     * 1. pixKey starting with "ERROR" → throws RuntimeException (gateway unreachable)
+     *    AC-4B-12
+     *
+     * 2. pixKey starting with "FAIL-" → failure response
+     *    Returns PaymentResponse(status="failed", error_code="REJECTED_BY_RECEIVER")
+     *    AC-4B-11
+     *
+     * 3. Amount ending with ".01" → sync success (processed)
+     *    Returns PaymentResponse(status="processed", transaction_id="mock-txn-{id}-{ts}")
+     *    AC-4B-08
+     *
+     * 4. Amount ending with ".02" → sync failure (failed)
+     *    Returns PaymentResponse(status="failed", error_code="INSUFFICIENT_FUNDS")
+     *    AC-4B-09
+     *
+     * 5. All other amounts → async queued (default)
+     *    Returns PaymentResponse(status="queued", transaction_id="mock-txn-{id}-{ts}")
+     *    AC-4B-10
+     *
+     * @see docs/plans/phase-4b-pix-payment-execution.md
      */
     public function initiatePayment(int $paymentId, string $pixKey, string $amount): PaymentResponse
     {
+        // pixKey starting with "ERROR" → RuntimeException (gateway unreachable)
+        if (str_starts_with($pixKey, 'ERROR')) {
+            throw new \RuntimeException('Gateway connection timeout');
+        }
+
+        // pixKey starting with "FAIL-" → failure response
+        // API call succeeds but payment is rejected by receiver
+        // AC-4B-11: transaction_id is null for rejected payments
+        if (str_starts_with($pixKey, 'FAIL-')) {
+            return new PaymentResponse(
+                success: false,
+                transaction_id: null,
+                status: 'failed',
+                error_code: 'REJECTED_BY_RECEIVER',
+                error_message: 'Destinatário rejeitou o pagamento',
+            );
+        }
+
+        // Amount ending with ".01" → sync success (processed)
+        if (str_ends_with($amount, '.01')) {
+            $txnId = "mock-txn-{$paymentId}-".time();
+
+            return new PaymentResponse(
+                success: true,
+                transaction_id: $txnId,
+                status: 'processed',
+            );
+        }
+
+        // Amount ending with ".02" → sync failure (failed)
+        // AC-4B-09: API call succeeds but payment is rejected
+        // success=true indicates the gateway API call succeeded;
+        // status="failed" indicates the payment itself was rejected
+        if (str_ends_with($amount, '.02')) {
+            $txnId = "mock-txn-{$paymentId}-".time();
+
+            return new PaymentResponse(
+                success: true,
+                transaction_id: $txnId,
+                status: 'failed',
+                error_code: 'INSUFFICIENT_FUNDS',
+                error_message: 'Saldo insuficiente para PIX',
+            );
+        }
+
+        // Default: async queued
+        $txnId = "mock-txn-{$paymentId}-".time();
+
         return new PaymentResponse(
             success: true,
-            transaction_id: "mock-txn-{$paymentId}",
+            transaction_id: $txnId,
             status: 'queued',
         );
     }
