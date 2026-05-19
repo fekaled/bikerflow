@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\PixGatewayInterface;
 use App\Enums\PaymentAuditAction;
 use App\Enums\PaymentStatus;
 use App\Enums\ShiftStatus;
@@ -11,6 +12,7 @@ use App\Models\PaymentAuditLog;
 use App\Models\Shift;
 use App\Models\ShiftBiker;
 use App\Models\User;
+use App\Services\PixPaymentService;
 
 /**
  * Phase 3B: Orchestrates payment release workflow.
@@ -23,6 +25,10 @@ use App\Models\User;
  */
 class PaymentReleaseService
 {
+    public function __construct(
+        private readonly ?PixGatewayInterface $gateway = null
+    ) {}
+
     /**
      * Get payment review data for a closed/approved shift.
      *
@@ -161,7 +167,21 @@ class PaymentReleaseService
         // Check if all payments for this shift are now released
         $this->checkAndTransitionShiftToApproved($payment->shiftBiker->shift);
 
-        return $payment;
+
+        // Phase 4B: Initiate gateway transfer after payment transitions to processing
+        $this->gatewayInitiateTransfer($payment, $admin);
+
+        return $payment->refresh();
+    }
+
+    /**
+     * Resolve the gateway and call initiateTransfer.
+     * Uses injected gateway if available, otherwise resolves from container.
+     */
+    private function gatewayInitiateTransfer(Payment $payment, User $admin): void
+    {
+        $gateway = $this->gateway ?? app(PixGatewayInterface::class);
+        (new PixPaymentService($gateway))->initiateTransfer($payment, $admin);
     }
 
     /**
