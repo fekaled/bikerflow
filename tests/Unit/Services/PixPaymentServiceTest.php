@@ -4,8 +4,10 @@ namespace Tests\Unit\Services;
 
 use App\Contracts\PaymentResponse;
 use App\Contracts\PixGatewayInterface;
+use App\Contracts\VerifyKeyResponse;
 use App\Enums\PaymentAuditAction;
 use App\Enums\PaymentStatus;
+use App\Enums\PixKeyType;
 use App\Enums\ShiftStatus;
 use App\Models\Biker;
 use App\Models\Payment;
@@ -44,18 +46,24 @@ class PixPaymentServiceTest extends TestCase
     use RefreshDatabase;
 
     private PixPaymentService $service;
+
     private MockPixGateway $gateway;
+
     private Restaurant $restaurant;
+
     private User $admin;
+
     private Biker $biker;
+
     private Shift $shift;
+
     private ShiftBiker $shiftBiker;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->restaurant = Restaurant::factory()->create(['rate_per_trip' => '15.00']);
@@ -157,7 +165,7 @@ class PixPaymentServiceTest extends TestCase
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
 
         // Mock to track calls
-        $this->app->instance(PixGatewayInterface::class, $trackingGateway = new TrackingPixGateway());
+        $this->app->instance(PixGatewayInterface::class, $trackingGateway = new TrackingPixGateway);
 
         $service = new PixPaymentService($trackingGateway);
         $service->initiateTransfer($payment, $this->admin);
@@ -204,7 +212,7 @@ class PixPaymentServiceTest extends TestCase
 
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
 
-        $trackingGateway = new TrackingPixGateway();
+        $trackingGateway = new TrackingPixGateway;
         $service = new PixPaymentService($trackingGateway);
         $service->initiateTransfer($payment, $this->admin);
 
@@ -222,7 +230,7 @@ class PixPaymentServiceTest extends TestCase
     {
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
 
-        $trackingGateway = new TrackingPixGateway();
+        $trackingGateway = new TrackingPixGateway;
         $service = new PixPaymentService($trackingGateway);
         $service->initiateTransfer($payment, $this->admin);
 
@@ -234,7 +242,7 @@ class PixPaymentServiceTest extends TestCase
     {
         $payment = $this->createProcessingPayment(['amount' => '123.45']);
 
-        $trackingGateway = new TrackingPixGateway();
+        $trackingGateway = new TrackingPixGateway;
         $service = new PixPaymentService($trackingGateway);
         $service->initiateTransfer($payment, $this->admin);
 
@@ -246,7 +254,7 @@ class PixPaymentServiceTest extends TestCase
     {
         $payment = $this->createProcessingPayment(['amount' => '75.50']);
 
-        $trackingGateway = new TrackingPixGateway();
+        $trackingGateway = new TrackingPixGateway;
         $service = new PixPaymentService($trackingGateway);
         $service->initiateTransfer($payment, $this->admin);
 
@@ -261,7 +269,7 @@ class PixPaymentServiceTest extends TestCase
 
     public function test_initiate_transfer_gateway_exception_payment_stays_processing(): void
     {
-        $gateway = new ExceptionPixGateway();
+        $gateway = new ExceptionPixGateway;
         $service = new PixPaymentService($gateway);
         $payment = $this->createProcessingPayment();
 
@@ -273,7 +281,7 @@ class PixPaymentServiceTest extends TestCase
 
     public function test_initiate_transfer_gateway_exception_sets_gateway_status_error(): void
     {
-        $gateway = new ExceptionPixGateway();
+        $gateway = new ExceptionPixGateway;
         $service = new PixPaymentService($gateway);
         $payment = $this->createProcessingPayment();
 
@@ -285,7 +293,7 @@ class PixPaymentServiceTest extends TestCase
 
     public function test_initiate_transfer_gateway_exception_writes_audit_log(): void
     {
-        $gateway = new ExceptionPixGateway();
+        $gateway = new ExceptionPixGateway;
         $service = new PixPaymentService($gateway);
         $payment = $this->createProcessingPayment();
 
@@ -303,7 +311,7 @@ class PixPaymentServiceTest extends TestCase
 
     public function test_initiate_transfer_gateway_exception_audit_log_has_error_type(): void
     {
-        $gateway = new ExceptionPixGateway();
+        $gateway = new ExceptionPixGateway;
         $service = new PixPaymentService($gateway);
         $payment = $this->createProcessingPayment();
 
@@ -318,7 +326,7 @@ class PixPaymentServiceTest extends TestCase
 
     public function test_initiate_transfer_gateway_exception_returns_payment_not_throws(): void
     {
-        $gateway = new ExceptionPixGateway();
+        $gateway = new ExceptionPixGateway;
         $service = new PixPaymentService($gateway);
         $payment = $this->createProcessingPayment();
 
@@ -337,7 +345,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_processed_auto_transitions_to_paid(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.01']);
-        $this->gateway = new MockPixGateway(); // Mock returns "processed" for .01
+        $this->gateway = new MockPixGateway; // Mock returns "processed" for .01
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -349,7 +357,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_processed_sets_paid_at(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.01']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
         $before = now();
 
@@ -367,7 +375,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_processed_stores_gateway_transaction_id(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.01']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -381,7 +389,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_processed_creates_succeed_audit_log(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.01']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -422,7 +430,7 @@ class PixPaymentServiceTest extends TestCase
 
         $payment = $this->createProcessingPayment(['amount' => '75.01']); // .01 → processed
 
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         // Both get processed → shift should go to Paid
@@ -451,7 +459,7 @@ class PixPaymentServiceTest extends TestCase
 
         $payment = $this->createProcessingPayment(['amount' => '75.01']); // .01 → processed
 
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -469,7 +477,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_failed_auto_transitions_to_failed(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.02']);
-        $this->gateway = new MockPixGateway(); // .02 → failed
+        $this->gateway = new MockPixGateway; // .02 → failed
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -481,7 +489,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_failed_sets_failed_at_and_reason(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.02']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -495,7 +503,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_failed_stores_gateway_transaction_id(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.02']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -509,7 +517,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_failed_creates_fail_audit_log(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.02']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -531,7 +539,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_failed_does_not_regress_shift(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.02']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -547,7 +555,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_queued_payment_stays_processing(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
-        $this->gateway = new MockPixGateway(); // .00 → queued
+        $this->gateway = new MockPixGateway; // .00 → queued
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -559,7 +567,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_queued_stores_transaction_id_and_status(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -573,7 +581,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_queued_creates_attempt_audit_log_only(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -595,7 +603,7 @@ class PixPaymentServiceTest extends TestCase
 
     public function test_initiate_transfer_unknown_status_treated_as_queued(): void
     {
-        $gateway = new UnknownStatusPixGateway();
+        $gateway = new UnknownStatusPixGateway;
         $service = new PixPaymentService($gateway);
         $payment = $this->createProcessingPayment();
 
@@ -616,7 +624,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_audit_logs_have_unique_transaction_refs(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.01']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -632,7 +640,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_audit_logs_contain_required_payload_fields(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -658,7 +666,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_gateway_attempt_ref_starts_with_gateway_prefix(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.00']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $this->service->initiateTransfer($payment, $this->admin);
@@ -705,7 +713,7 @@ class PixPaymentServiceTest extends TestCase
             'status' => PaymentStatus::Processing,
         ]);
 
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         // Biker A fails
@@ -749,8 +757,8 @@ class PixPaymentServiceTest extends TestCase
         ]);
 
         // A throws exception, B uses normal gateway
-        $exceptionGateway = new ExceptionPixGateway();
-        $normalGateway = new MockPixGateway();
+        $exceptionGateway = new ExceptionPixGateway;
+        $normalGateway = new MockPixGateway;
 
         $serviceA = new PixPaymentService($exceptionGateway);
         $serviceB = new PixPaymentService($normalGateway);
@@ -772,7 +780,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_zero_amount_queued(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '0.00']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -783,7 +791,7 @@ class PixPaymentServiceTest extends TestCase
 
     public function test_initiate_transfer_null_transaction_id_stored(): void
     {
-        $gateway = new NullTxnIdPixGateway();
+        $gateway = new NullTxnIdPixGateway;
         $service = new PixPaymentService($gateway);
         $payment = $this->createProcessingPayment();
 
@@ -796,7 +804,7 @@ class PixPaymentServiceTest extends TestCase
     public function test_initiate_transfer_returns_updated_payment(): void
     {
         $payment = $this->createProcessingPayment(['amount' => '75.01']);
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
         $this->service = new PixPaymentService($this->gateway);
 
         $result = $this->service->initiateTransfer($payment, $this->admin);
@@ -814,9 +822,9 @@ class TrackingPixGateway implements PixGatewayInterface
 {
     public array $lastCall = [];
 
-    public function verifyKey(\App\Enums\PixKeyType $keyType, string $keyValue): \App\Contracts\VerifyKeyResponse
+    public function verifyKey(PixKeyType $keyType, string $keyValue): VerifyKeyResponse
     {
-        return new \App\Contracts\VerifyKeyResponse(success: true, account_holder_name: 'Test');
+        return new VerifyKeyResponse(success: true, account_holder_name: 'Test');
     }
 
     public function initiatePayment(int $paymentId, string $pixKey, string $amount): PaymentResponse
@@ -845,9 +853,9 @@ class TrackingPixGateway implements PixGatewayInterface
  */
 class ExceptionPixGateway implements PixGatewayInterface
 {
-    public function verifyKey(\App\Enums\PixKeyType $keyType, string $keyValue): \App\Contracts\VerifyKeyResponse
+    public function verifyKey(PixKeyType $keyType, string $keyValue): VerifyKeyResponse
     {
-        return new \App\Contracts\VerifyKeyResponse(success: true, account_holder_name: 'Test');
+        return new VerifyKeyResponse(success: true, account_holder_name: 'Test');
     }
 
     public function initiatePayment(int $paymentId, string $pixKey, string $amount): PaymentResponse
@@ -866,9 +874,9 @@ class ExceptionPixGateway implements PixGatewayInterface
  */
 class UnknownStatusPixGateway implements PixGatewayInterface
 {
-    public function verifyKey(\App\Enums\PixKeyType $keyType, string $keyValue): \App\Contracts\VerifyKeyResponse
+    public function verifyKey(PixKeyType $keyType, string $keyValue): VerifyKeyResponse
     {
-        return new \App\Contracts\VerifyKeyResponse(success: true, account_holder_name: 'Test');
+        return new VerifyKeyResponse(success: true, account_holder_name: 'Test');
     }
 
     public function initiatePayment(int $paymentId, string $pixKey, string $amount): PaymentResponse
@@ -891,9 +899,9 @@ class UnknownStatusPixGateway implements PixGatewayInterface
  */
 class NullTxnIdPixGateway implements PixGatewayInterface
 {
-    public function verifyKey(\App\Enums\PixKeyType $keyType, string $keyValue): \App\Contracts\VerifyKeyResponse
+    public function verifyKey(PixKeyType $keyType, string $keyValue): VerifyKeyResponse
     {
-        return new \App\Contracts\VerifyKeyResponse(success: true, account_holder_name: 'Test');
+        return new VerifyKeyResponse(success: true, account_holder_name: 'Test');
     }
 
     public function initiatePayment(int $paymentId, string $pixKey, string $amount): PaymentResponse

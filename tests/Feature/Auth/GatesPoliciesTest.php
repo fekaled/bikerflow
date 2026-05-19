@@ -24,10 +24,15 @@ class GatesPoliciesTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $restaurantManager;
+
     private User $bikerUser;
+
     private Restaurant $restaurant;
+
     private Restaurant $otherRestaurant;
+
     private Biker $biker;
 
     protected function setUp(): void

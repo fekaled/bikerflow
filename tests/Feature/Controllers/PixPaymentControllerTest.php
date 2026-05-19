@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Contracts\PaymentResponse;
 use App\Contracts\PixGatewayInterface;
 use App\Enums\PaymentAuditAction;
 use App\Enums\PaymentStatus;
@@ -15,9 +14,9 @@ use App\Models\Restaurant;
 use App\Models\Shift;
 use App\Models\ShiftBiker;
 use App\Models\User;
+use App\Services\Gateway\MockPixGateway;
 use App\Services\PaymentReleaseService;
 use App\Services\PaymentSettlementService;
-use App\Services\Gateway\MockPixGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,10 +43,15 @@ class PixPaymentControllerTest extends TestCase
     use RefreshDatabase;
 
     private Restaurant $restaurant;
+
     private User $admin;
+
     private Biker $biker;
+
     private Shift $shift;
+
     private ShiftBiker $shiftBiker;
+
     private Payment $payment;
 
     protected function setUp(): void
@@ -103,7 +107,7 @@ class PixPaymentControllerTest extends TestCase
     {
         $this->payment->update(['status' => PaymentStatus::Pending]);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
 
         $route = route('shifts.payments.release', [
             'shift' => $this->shift->id,
@@ -183,7 +187,7 @@ class PixPaymentControllerTest extends TestCase
             'amount' => '75.01',
         ]);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
 
         $route = route('shifts.payments.release', [
             'shift' => $this->shift->id,
@@ -210,7 +214,7 @@ class PixPaymentControllerTest extends TestCase
             'amount' => '75.02',
         ]);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
 
         $route = route('shifts.payments.release', [
             'shift' => $this->shift->id,
@@ -235,7 +239,7 @@ class PixPaymentControllerTest extends TestCase
     {
         $this->payment->update(['amount' => '75.01']);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
         $route = route('shifts.payments.release', [
             'shift' => $this->shift->id,
             'payment' => $this->payment->id,
@@ -265,7 +269,7 @@ class PixPaymentControllerTest extends TestCase
     {
         $this->payment->update(['amount' => '75.02']);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
 
         $route = route('shifts.payments.release', [
             'shift' => $this->shift->id,
@@ -318,7 +322,7 @@ class PixPaymentControllerTest extends TestCase
 
         $this->payment->update(['amount' => '75.01']);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
 
         $this->actingAs($this->admin)->post(
             route('shifts.payments.release', ['shift' => $this->shift->id, 'payment' => $this->payment->id])
@@ -338,7 +342,7 @@ class PixPaymentControllerTest extends TestCase
         $this->shift->update(['status' => ShiftStatus::Approved]);
         $this->payment->update(['amount' => '75.02']);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
         $this->actingAs($this->admin)->post(
             route('shifts.payments.release', ['shift' => $this->shift->id, 'payment' => $this->payment->id])
         );
@@ -356,7 +360,7 @@ class PixPaymentControllerTest extends TestCase
             'amount' => '75.00',
         ]);
 
-        $this->app->instance(PixGatewayInterface::class, new MockPixGateway());
+        $this->app->instance(PixGatewayInterface::class, new MockPixGateway);
 
         $route = route('shifts.payments.release', [
             'shift' => $this->shift->id,

@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Contracts\WhatsappServiceInterface;
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Services\WhatsappLogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -435,7 +436,7 @@ class MagicLinkTest extends TestCase
         $service = $this->app->make(WhatsappServiceInterface::class);
 
         $this->assertInstanceOf(
-            \App\Services\WhatsappLogService::class,
+            WhatsappLogService::class,
             $service,
             'AC-46: WhatsappServiceInterface must be bound to WhatsappLogService'
         );

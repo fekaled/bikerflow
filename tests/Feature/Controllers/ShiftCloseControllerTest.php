@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Controllers;
 
-use App\Enums\PaymentStatus;
 use App\Enums\ShiftStatus;
 use App\Enums\UserRole;
 use App\Models\Biker;
@@ -31,8 +30,11 @@ class ShiftCloseControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $restaurantManager;
+
     private User $bikerUser;
+
     private Restaurant $restaurant;
 
     protected function setUp(): void

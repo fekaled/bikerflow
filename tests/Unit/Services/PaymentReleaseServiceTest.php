@@ -14,6 +14,7 @@ use App\Models\Restaurant;
 use App\Models\Shift;
 use App\Models\ShiftBiker;
 use App\Models\User;
+use App\Services\PaymentReleaseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -38,6 +39,7 @@ class PaymentReleaseServiceTest extends TestCase
     use RefreshDatabase;
 
     private Restaurant $restaurant;
+
     private User $admin;
 
     protected function setUp(): void
@@ -185,7 +187,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $result = $service->releasePayment($payment, $this->admin);
 
         $this->assertEquals(PaymentStatus::Processing, $result->status,
@@ -207,7 +209,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
 
         $this->assertEquals($this->admin->id, $payment->fresh()->released_by,
@@ -228,7 +230,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
         $before = now()->subSecond();
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
         $after = now()->addSecond();
 
@@ -255,7 +257,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
 
         $this->assertEquals(1, PaymentAuditLog::where('payment_id', $payment->id)
@@ -278,7 +280,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker2] = $this->createEligibleBiker('Biker 2');
         ['payment' => $payment2] = $this->assignBikerWithPayment($shift, $biker2);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment1, $this->admin);
         $service->releasePayment($payment2, $this->admin);
 
@@ -302,7 +304,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
 
         $log = PaymentAuditLog::where('payment_id', $payment->id)->first();
@@ -335,7 +337,7 @@ class PaymentReleaseServiceTest extends TestCase
         $biker = $this->createBikerWithoutPix();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         $this->expectException(\RuntimeException::class);
         $service->releasePayment($payment, $this->admin);
@@ -350,7 +352,7 @@ class PaymentReleaseServiceTest extends TestCase
         $biker = $this->createBikerWithoutPix();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         try {
             $service->releasePayment($payment, $this->admin);
@@ -375,7 +377,7 @@ class PaymentReleaseServiceTest extends TestCase
         $biker = $this->createBikerWithoutUser();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         $this->expectException(\RuntimeException::class);
         $service->releasePayment($payment, $this->admin);
@@ -390,7 +392,7 @@ class PaymentReleaseServiceTest extends TestCase
         $biker = $this->createBikerWithoutUser();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         try {
             $service->releasePayment($payment, $this->admin);
@@ -417,7 +419,7 @@ class PaymentReleaseServiceTest extends TestCase
             'status' => PaymentStatus::Processing,
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         $this->expectException(\RuntimeException::class);
         $service->releasePayment($payment, $this->admin);
@@ -434,7 +436,7 @@ class PaymentReleaseServiceTest extends TestCase
             'status' => PaymentStatus::Paid,
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         $this->expectException(\RuntimeException::class);
         $service->releasePayment($payment, $this->admin);
@@ -451,7 +453,7 @@ class PaymentReleaseServiceTest extends TestCase
             'status' => PaymentStatus::Failed,
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         $this->expectException(\RuntimeException::class);
         $service->releasePayment($payment, $this->admin);
@@ -470,7 +472,7 @@ class PaymentReleaseServiceTest extends TestCase
         $biker = $this->createBikerWithoutPix();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         try {
             $service->releasePayment($payment, $this->admin);
@@ -498,7 +500,7 @@ class PaymentReleaseServiceTest extends TestCase
             'revenue' => '25.00',
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
 
         $fresh = $payment->fresh();
@@ -523,7 +525,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker2] = $this->createEligibleBiker('Biker 2');
         ['payment' => $payment2] = $this->assignBikerWithPayment($shift, $biker2);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $results = $service->releaseAllEligiblePayments($shift, $this->admin);
 
         $this->assertCount(2, $results['released'],
@@ -548,7 +550,7 @@ class PaymentReleaseServiceTest extends TestCase
         $noPixBiker = $this->createBikerWithoutPix('No PIX');
         ['payment' => $blockedPayment] = $this->assignBikerWithPayment($shift, $noPixBiker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $results = $service->releaseAllEligiblePayments($shift, $this->admin);
 
         $this->assertCount(1, $results['released'],
@@ -575,7 +577,7 @@ class PaymentReleaseServiceTest extends TestCase
         $noPixBiker = $this->createBikerWithoutPix('No PIX');
         $this->assignBikerWithPayment($shift, $noPixBiker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $results = $service->releaseAllEligiblePayments($shift, $this->admin);
 
         $this->assertArrayHasKey('released', $results,
@@ -605,7 +607,7 @@ class PaymentReleaseServiceTest extends TestCase
             'restaurant_rate' => '15.00',
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         $this->expectException(\RuntimeException::class);
         $service->releaseAllEligiblePayments($shift, $this->admin);
@@ -624,7 +626,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         // First release
         $results1 = $service->releaseAllEligiblePayments($shift, $this->admin);
@@ -649,7 +651,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
 
         $this->assertEquals(ShiftStatus::Approved, $shift->fresh()->status,
@@ -667,7 +669,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker2] = $this->createEligibleBiker('Biker 2');
         ['payment' => $payment2] = $this->assignBikerWithPayment($shift, $biker2);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         // Release first payment — shift should stay closed (one more pending)
         $service->releasePayment($payment1, $this->admin);
@@ -693,7 +695,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
 
         // Both changes must be consistent
@@ -717,7 +719,7 @@ class PaymentReleaseServiceTest extends TestCase
         $shift = $this->createClosedShift();
         // No bikers, no payments
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->checkAndTransitionShiftToApproved($shift);
 
         $this->assertEquals(ShiftStatus::Approved, $shift->fresh()->status,
@@ -740,7 +742,7 @@ class PaymentReleaseServiceTest extends TestCase
         $noPixBiker = $this->createBikerWithoutPix('No PIX');
         $this->assignBikerWithPayment($shift, $noPixBiker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         // Release eligible — one is still blocked
         $service->releasePayment($eligiblePayment, $this->admin);
@@ -766,7 +768,7 @@ class PaymentReleaseServiceTest extends TestCase
             'released_at' => now(),
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $reviewData = $service->getPaymentReviewData($shift);
 
         $this->assertArrayHasKey('paymentItems', $reviewData);
@@ -787,7 +789,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $reviewData = $service->getPaymentReviewData($shift);
 
         $this->assertArrayHasKey('shift', $reviewData);
@@ -815,7 +817,7 @@ class PaymentReleaseServiceTest extends TestCase
         $noPixBiker = $this->createBikerWithoutPix('No PIX');
         $this->assignBikerWithPayment($shift, $noPixBiker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $reviewData = $service->getPaymentReviewData($shift);
 
         $items = $reviewData['paymentItems'];
@@ -854,7 +856,7 @@ class PaymentReleaseServiceTest extends TestCase
             'amount' => '50.00',
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $reviewData = $service->getPaymentReviewData($shift);
 
         // Both are pending
@@ -874,7 +876,7 @@ class PaymentReleaseServiceTest extends TestCase
     {
         $shift = $this->createClosedShift();
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $reviewData = $service->getPaymentReviewData($shift);
 
         $this->assertCount(0, $reviewData['paymentItems'],
@@ -900,7 +902,7 @@ class PaymentReleaseServiceTest extends TestCase
         $noPixBiker = $this->createBikerWithoutPix('No PIX Biker');
         ['payment' => $payment2] = $this->assignBikerWithPayment($shift, $noPixBiker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment1, $this->admin);
 
         $this->assertEquals(PaymentStatus::Processing, $payment1->fresh()->status,
@@ -924,7 +926,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker] = $this->createEligibleBiker();
         ['payment' => $payment] = $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         // First release succeeds
         $service->releasePayment($payment, $this->admin);
@@ -952,7 +954,7 @@ class PaymentReleaseServiceTest extends TestCase
             'revenue' => '0.00',
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $result = $service->releasePayment($payment, $this->admin);
 
         $this->assertEquals(PaymentStatus::Processing, $result->status,
@@ -993,7 +995,7 @@ class PaymentReleaseServiceTest extends TestCase
         // Revoke the PIX key after shift close
         $pixKey->update(['is_verified' => false, 'verified_at' => null]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
 
         $this->expectException(\RuntimeException::class);
         $service->releasePayment($payment, $this->admin);
@@ -1015,7 +1017,7 @@ class PaymentReleaseServiceTest extends TestCase
             'revenue' => '37.50',
         ]);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment, $this->admin);
 
         $fresh = $payment->fresh();
@@ -1040,7 +1042,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker2] = $this->createEligibleBiker('Biker 2');
         ['payment' => $payment2] = $this->assignBikerWithPayment($shift, $biker2);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releasePayment($payment1, $this->admin);
         $service->releasePayment($payment2, $this->admin);
 
@@ -1075,7 +1077,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $bikerD] = $this->createEligibleBiker('Biker D');
         $this->assignBikerWithPayment($shift, $bikerD);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $results = $service->releaseAllEligiblePayments($shift, $this->admin);
 
         $this->assertCount(2, $results['released'],
@@ -1103,7 +1105,7 @@ class PaymentReleaseServiceTest extends TestCase
         $biker2 = $this->createBikerWithoutUser('No User 1');
         $this->assignBikerWithPayment($shift, $biker2);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $results = $service->releaseAllEligiblePayments($shift, $this->admin);
 
         $this->assertCount(0, $results['released'],
@@ -1129,7 +1131,7 @@ class PaymentReleaseServiceTest extends TestCase
         ['biker' => $biker2] = $this->createEligibleBiker('Biker 2');
         $this->assignBikerWithPayment($shift, $biker2);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $service->releaseAllEligiblePayments($shift, $this->admin);
 
         $this->assertEquals(ShiftStatus::Approved, $shift->fresh()->status,
@@ -1154,7 +1156,7 @@ class PaymentReleaseServiceTest extends TestCase
         // No user, no verified PIX
         $this->assignBikerWithPayment($shift, $biker);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $reviewData = $service->getPaymentReviewData($shift);
 
         $item = $reviewData['paymentItems'][0];
@@ -1179,7 +1181,7 @@ class PaymentReleaseServiceTest extends TestCase
         $noPix = $this->createBikerWithoutPix('No PIX');
         $this->assignBikerWithPayment($shift, $noPix);
 
-        $service = app(\App\Services\PaymentReleaseService::class);
+        $service = app(PaymentReleaseService::class);
         $reviewData = $service->getPaymentReviewData($shift);
 
         $this->assertEquals(1, $reviewData['eligibleCount'],

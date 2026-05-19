@@ -12,7 +12,6 @@ use App\Models\PaymentAuditLog;
 use App\Models\Shift;
 use App\Models\ShiftBiker;
 use App\Models\User;
-use App\Services\PixPaymentService;
 
 /**
  * Phase 3B: Orchestrates payment release workflow.
@@ -166,7 +165,6 @@ class PaymentReleaseService
 
         // Check if all payments for this shift are now released
         $this->checkAndTransitionShiftToApproved($payment->shiftBiker->shift);
-
 
         // Phase 4B: Initiate gateway transfer after payment transitions to processing
         $this->gatewayInitiateTransfer($payment, $admin);

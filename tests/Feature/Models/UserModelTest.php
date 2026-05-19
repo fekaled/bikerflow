@@ -5,7 +5,9 @@ namespace Tests\Feature\Models;
 use App\Enums\UserRole;
 use App\Models\Biker;
 use App\Models\Restaurant;
+use App\Models\Shift;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -317,7 +319,7 @@ class UserModelTest extends TestCase
     {
         User::factory()->create(['phone' => '5511999999999']);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         User::factory()->create(['phone' => '5511999999999']);
     }
@@ -453,7 +455,7 @@ class UserModelTest extends TestCase
         $user = User::factory()->create();
         $restaurant = Restaurant::factory()->create();
 
-        $shift = \App\Models\Shift::create([
+        $shift = Shift::create([
             'restaurant_id' => $restaurant->id,
             'workflow_type' => 'live_tick',
             'status' => 'draft',
@@ -472,9 +474,9 @@ class UserModelTest extends TestCase
     {
         $restaurant = Restaurant::factory()->create();
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
-        \App\Models\Shift::create([
+        Shift::create([
             'restaurant_id' => $restaurant->id,
             'workflow_type' => 'live_tick',
             'status' => 'draft',
@@ -490,7 +492,7 @@ class UserModelTest extends TestCase
     {
         $restaurant = Restaurant::factory()->create();
 
-        $shift = \App\Models\Shift::create([
+        $shift = Shift::create([
             'restaurant_id' => $restaurant->id,
             'workflow_type' => 'live_tick',
             'status' => 'draft',

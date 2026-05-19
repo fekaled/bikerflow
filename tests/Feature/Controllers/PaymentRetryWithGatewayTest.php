@@ -32,6 +32,7 @@ class PaymentRetryWithGatewayTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private Restaurant $restaurant;
 
     protected function setUp(): void

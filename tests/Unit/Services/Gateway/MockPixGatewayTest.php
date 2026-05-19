@@ -30,7 +30,7 @@ class MockPixGatewayTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->gateway = new MockPixGateway();
+        $this->gateway = new MockPixGateway;
     }
 
     // ========================================================================

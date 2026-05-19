@@ -6,11 +6,22 @@ use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\RestaurantManager\ShiftEntryController;
 use App\Http\Controllers\RestaurantManager\ShiftTrackingController;
+use App\Http\Controllers\Webhook\PixWebhookController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+// Phase 4C: PIX Webhook endpoint — unauthenticated, signature-verified
+Route::post('/webhooks/pix/status', [PixWebhookController::class, 'handle'])
+    ->middleware('verify.pix.webhook')
+    ->name('webhooks.pix.status');
+
+// Reject other HTTP methods on the webhook endpoint (AC-4C-47)
+Route::match(['get', 'put', 'patch', 'delete', 'options'], '/webhooks/pix/status', function () {
+    return response()->json(['error' => 'Method not allowed'], 405);
 });
 
 // Auth routes

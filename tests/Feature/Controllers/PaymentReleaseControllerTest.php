@@ -28,8 +28,11 @@ class PaymentReleaseControllerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private Restaurant $restaurant;
+
     private PixKey $verifiedPix;
+
     private PixKey $unverifiedPix;
 
     protected function setUp(): void

@@ -33,7 +33,9 @@ class ShiftCloseServiceTest extends TestCase
     use RefreshDatabase;
 
     private Restaurant $restaurant;
+
     private User $admin;
+
     private ShiftCloseService $service;
 
     protected function setUp(): void
@@ -48,7 +50,7 @@ class ShiftCloseServiceTest extends TestCase
             'role' => UserRole::Admin,
         ]);
 
-        $this->service = new ShiftCloseService();
+        $this->service = new ShiftCloseService;
     }
 
     // ========================================================================

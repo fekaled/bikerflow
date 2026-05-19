@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserRole;
+use App\Http\Middleware\VerifyPixWebhookSignature;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => EnsureUserRole::class,
+            'verify.pix.webhook' => VerifyPixWebhookSignature::class,
         ]);
     })
     ->booted(function () {
@@ -23,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // (e.g., when tests check $router->getMiddleware() without
         // making an HTTP request first).
         app('router')->aliasMiddleware('role', EnsureUserRole::class);
+        app('router')->aliasMiddleware('verify.pix.webhook', VerifyPixWebhookSignature::class);
 
         // Add a public session() macro on TestResponse so tests can
         // access session data from redirect responses.
