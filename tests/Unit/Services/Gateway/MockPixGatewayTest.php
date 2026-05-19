@@ -228,10 +228,9 @@ class MockPixGatewayTest extends TestCase
             $response->success,
             'initiatePayment() stub must return success=true (AC-4A-09)',
         );
-        $this->assertEquals(
-            'mock-txn-1',
-            $response->transaction_id,
-            'initiatePayment() stub must return transaction_id "mock-txn-{paymentId}" (AC-4A-09)',
+        $this->assertTrue(
+            str_starts_with($response->transaction_id, 'mock-txn-1-'),
+            'initiatePayment() stub must return transaction_id starting with "mock-txn-{paymentId}-" (AC-4A-09)',
         );
         $this->assertEquals(
             'queued',
