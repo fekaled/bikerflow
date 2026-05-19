@@ -1,7 +1,7 @@
 # BikerFlow — Project Progress Board
 
-> **Last Updated:** 2026-05-19 (Phase 4C — 🟢 Validated)
-> **Current Phase:** Phase 5 (🔵 Not Started) → Ready for planning
+> **Last Updated:** 2026-05-19 (Phase 5A — 🟢 Validated)
+> **Current Phase:** Phase 5 (🟠 In Development) → Phase 5A validated, Phase 5B ready
 
 ---
 
@@ -21,7 +21,7 @@
 | **Phase 4A** | PIX Gateway Interface & Key Verification | 🟢 Validated |
 | **Phase 4B** | PIX Payment Execution (Automated Settlement) | 🟢 Validated |
 | **Phase 4C** | PIX Webhooks & Async Status Updates | 🟢 Validated |
-| **Phase 5** | Dashboards & Notifications — Admin margin, biker status | 🔵 Not Started |
+| **Phase 5** | Dashboards & Notifications — Admin margin, biker status | 🟠 In Development |
 
 ---
 
@@ -43,7 +43,7 @@
 | Phase-4C | PIX Webhooks & Async Status Updates | 🟢 Validated | `docs/plans/phase-4c-pix-webhooks-async-status.md` | 5 test files | ✅ 137 tests pass | `docs/audits/phase-4c-audit.md` |
 | US-01 | PDF Trip Sheet for manual tracking | 🔵 Not Started | — | — | — | — |
 | US-02 | Holiday shift rate override | 🔵 Not Started | — | — | — | — |
-| US-03 | Admin Margin Dashboard | 🔵 Not Started | — | — | — | — |
+| US-03 (Phase 5A) | Admin Margin Dashboard — Summary Cards | 🟢 Validated | `docs/plans/phase-5a-admin-margin-dashboard.md` | `MarginAggregatorServiceTest` (12), `MarginDashboardControllerTest` (12) | ✅ 24 pass (12 unit + 12 feature), 1233 total suite, 0 regressions | `docs/audits/US-03-phase-5a-audit.md` |
 | US-04 | Biker PIX failure notification | 🔵 Not Started | — | — | — | — |
 
 ---
@@ -96,6 +96,7 @@
 | MarkFailedRequest | — | — | ✅ `app/Http/Requests/MarkFailedRequest.php` | — | `PaymentSettlementControllerTest` | 🟩 Tests GREEN |
 | RetryPaymentRequest | — | — | ✅ `app/Http/Requests/RetryPaymentRequest.php` | — | `PaymentSettlementControllerTest` | 🟩 Tests GREEN |
 | Payment Status View | — | — | — | ✅ `resources/views/shifts/payment-status.blade.php` (+gateway txn ID + status badges) | `PaymentSettlementControllerTest`, `PixPaymentControllerTest` | 🟢 Validated |
+| | 12 unit + 12 feature tests | 🟠 In Development |
 | PixPaymentService | — | ✅ `app/Services/PixPaymentService.php` | — | — | `PixPaymentServiceTest` (38 unit tests) | 🟢 Validated |
 | MockPixGateway (extended) | — | ✅ `app/Services/Gateway/MockPixGateway.php` (+3 response scenarios) | — | — | `MockPixGatewayTest` | 🟢 Validated |
 | PaymentAuditAction (extended) | — | — | — | — | `EnumTest` | 🟢 Validated |
@@ -159,6 +160,15 @@ merge to main       →  Orchestrator merges              →  ✅ Done
 
 <!-- Newest entries at the top -->
 
+| 2026-05-19 | Validator | Audited Phase 5A — 🟢 PASS | 1233/1233 test suite passes (2348 assertions). All 15 ACs verified. BR-03 enforced (PayoutService delegates), BR-04 enforced (per-biker independent status counting). BCMath scale 2 throughout aggregation. No schema changes. 1 Low finding: `formatBrl()` float cast for display — acceptable, no action required. Audit: `docs/audits/US-03-phase-5a-audit.md`. Approved for merge. |
+
+<!-- Newest entries at the top -->
+
+| 2026-05-19 | Tester | Tests GREEN — Phase 5A | 24/24 tests pass (12 unit + 12 feature, 68 assertions). Full regression: 1,233 tests GREEN (2,348 assertions), 0 failures, 0 regressions. MarginAggregatorService: BCMath aggregation via PayoutService + RevenueService. MarginDashboardController: BRL formatting. View: 5 Tailwind metric cards. All 15 ACs covered. Ready for /validate. |
+
+| Date | Agent | Action | Details |
+|------|-------|--------|---------|
+| 2026-05-19 | Developer / Tracker | Phase 5A development complete — 🟠 In Development | US-03 Admin Margin Dashboard implemented. Files created: `app/Services/MarginAggregatorService.php` (constructor-injected `PayoutService` + `RevenueService`, `aggregate($year, $month)` queries `Shift::Closed` with eager-loaded `shiftBikers.payment`, BCMath accumulation at scale 2, payment status counting for BR-04), `app/Http/Controllers/Admin/MarginDashboardController.php` (BRL formatting with `number_format($value, 2, ',', '.')` prefixed with `R$ `), `resources/views/admin/margin-dashboard.blade.php` (5 metric cards using Tailwind grid: Receita Total, Pagamentos, Margem Líquida, Turnos Fechados, Pagamentos (Pago/Pendente)). Route already registered in `routes/web.php` under `role:admin` middleware. 24 test cases written (12 unit + 12 feature). Tests need runner verification. Next: `/test green` to confirm. |
 | 2026-05-19 | Validator | Audited Phase 4C — 🟢 PASS | 1209 tests pass. All Phase 4C ACs fully covered including the command tests. PRD deviation explicitly resolved via plan update. No security/financial issues. Approved for merge. |
 
 | Date | Agent | Action | Details |
